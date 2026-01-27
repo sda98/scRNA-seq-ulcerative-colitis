@@ -47,7 +47,7 @@ suppressPackageStartupMessages({
 })
 
 # =========================
-# Setting up directions and folders
+# Paths and I/O
 # =========================
 root_dir <- getwd()
 if (basename(root_dir) == "scripts") root_dir <- dirname(root_dir)
