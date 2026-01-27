@@ -65,7 +65,7 @@ seurat_obj_filtered <- readRDS(in_obj)
 
 # Basic sanity checks
 if (!"sample_id" %in% colnames(seurat_obj_filtered@meta.data)) {
-  stop("metadata column 'sample_id' not found. It should exist from Script 01/02.")
+  stop("metadata column 'sample_id' not found. It should exist from Scripts 01/02.")
 }
 if (!"gsm_id" %in% colnames(seurat_obj_filtered@meta.data)) {
   stop("metadata column 'gsm_id' not found. It should exist from Script 01.")
