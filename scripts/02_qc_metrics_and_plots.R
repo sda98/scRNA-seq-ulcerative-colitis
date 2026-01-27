@@ -55,7 +55,7 @@ suppressPackageStartupMessages({
 })
 
 # =========================
-# Setting up directions and files
+# Paths and I/O
 # =========================
 
 root_dir <- getwd()
