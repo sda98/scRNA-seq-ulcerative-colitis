@@ -4,22 +4,35 @@
 # 01_load_data_create_seurat.R
 #
 # Purpose:
-#   - Recursively load raw 10X MTX matrices (12 samples) from GEO GSE231993
-#   - Merge into one sparse count matrix (safe union of genes)
-#   - Build Seurat object + attach metadata (condition/replicate/sample_id)
-#   - Compute basic QC metrics (percent.mt, percent.ribo)
-#   - Save Seurat object + clinical summary table
+#   1) Locate and load all raw 10X MTX matrices (matrix.mtx.gz + barcodes + features)
+#      from data/raw/ (recursive search; 12 samples from GEO GSE231993)
+#   2) Merge all samples into one sparse count matrix using a safe union of genes
+#      (aligns gene sets across samples and fills missing genes with zeros)
+#   3) Build a Seurat object and attach per-cell metadata:
+#      - GSM ID, condition, replicate, sample_id
+#      - Compute basic QC metrics (percent.mt, percent.ribo)
+#   4) Export a per-sample QC/clinical summary table and save the raw Seurat object
+#      for downstream scripts (Script 02+)
+#
+# Dataset:
+#   Du et al. (2023) Nature Communications
+#   GEO: GSE231993
+#   Data type: Raw counts (10X MTX format)
+#   Samples: 12 (4 UC, 4 HC, 4 UC self-control)
 #
 # Inputs (expected):
-#   data/raw/GSE231993/**/matrix.mtx.gz
-#   data/raw/GSE231993/**/barcodes.tsv.gz
-#   data/raw/GSE231993/**/features.tsv.gz
-#   optional: metadata/sample_sheet.csv (preferred GSM → condition mapping)
+#   data/raw/**/matrix.mtx.gz
+#   data/raw/**/barcodes.tsv.gz
+#   data/raw/**/features.tsv.gz
 #
 # Outputs:
 #   results/01_quality_control/sessionInfo.txt
 #   results/01_quality_control/tables/clinical_summary.csv
 #   results/01_quality_control/objects/seurat_raw.rds
+#
+# Notes:
+#   - This script expects the GEO files to be extracted under: data/raw/
+#   - Metadata mapping is hard-coded in this script based on GSM IDs.
 # =============================================================================
 
 # =========================
@@ -34,7 +47,7 @@ suppressPackageStartupMessages({
 })
 
 # =========================
-# Project root detection
+# Setting up directions and folders
 # =========================
 root_dir <- getwd()
 if (basename(root_dir) == "scripts") root_dir <- dirname(root_dir)
@@ -62,9 +75,9 @@ cat("Data type: RAW COUNTS (10X format - MTX files)\n")
 cat("Samples: 12 (4 Ulcerative Colitis, 4 Heahtly Control, 4 Ulcerative Colitis-self-control)\n")
 cat("Focus: Colonocytes in ulcerative colitis\n\n")
 
-# =========================
-# 1) LOAD DATA - 10X MTX
-# =========================
+# =============================================================================
+# 1) LOAD DATA - 10X MTX (RECURSIVE SEARCH)
+# =============================================================================
 cat("Loading raw count matrices...\n")
 
 if (!dir.exists(raw_dir)) {
@@ -117,6 +130,10 @@ for (mtx_file in matrix_files) {
   count_matrices[[gsm_id]] <- load_10x_sample(mtx_file)
 }
 
+# =============================================================================
+# 2) MERGE SAMPLES 
+# =============================================================================
+
 cat("\nMerging samples (safe union of genes)...\n")
 
 merge_sparse_counts <- function(mats) {
@@ -149,9 +166,9 @@ cat("Cells:", ncol(counts_merged), "\n")
 rm(count_matrices) # Clearing memory
 gc()
 
-# =========================
-# 2) PREPARE METADATA
-# =========================
+# =============================================================================
+# 3) PREPARE METADATA (GSM → CONDITION/REPLICATE/SAMPLE_ID)
+# =============================================================================
 cat("\nPreparing metadata...\n")
 
 cell_barcodes <- colnames(counts_merged)
@@ -202,9 +219,9 @@ print(table(metadata$condition, useNA = "ifany"))
 cat("\nCells per sample:\n")
 print(table(metadata$sample_id, useNA = "ifany"))
 
-# =========================
-# 3) CREATE SEURAT OBJECT
-# =========================
+# =============================================================================
+# 4) CREATE SEURAT OBJECT
+# ============================================================================
 cat("\nCreating Seurat object...\n")
 
 seurat_obj <- CreateSeuratObject(
