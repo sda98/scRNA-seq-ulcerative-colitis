@@ -4,11 +4,11 @@
 # 07_clustering.R
 #
 # Purpose:
-#   1) Generate publication-style UMAP plots colored by cluster
-#      - res = 0.4 (with clean repelled labels)
-#      - res = 0.3 (no labels) + dashed circle highlight
-#      - res = 0.4 (no labels) + dashed circle highlight
-#   2) Save intermediate clustered Seurat object (before annotations)
+#   Generate publication-style UMAP plots colored by cluster
+#   1) res = 0.4 (with clean repelled labels)
+#   2) res = 0.3 (no labels) + dashed circle highlight of cluster(s) of interest 
+#   3) res = 0.4 (no labels) + dashed circle highlight of cluster(s) of interest
+#   4) Save intermediate clustered Seurat object (before annotations)
 #
 # Inputs:
 #   results/02_clustering_analysis/objects/seurat_harmony_umap.rds
@@ -28,14 +28,14 @@
 # =============================================================================
 
 # =========================
-# Libraries (required)
+# Libraries 
 # =========================
 suppressPackageStartupMessages({
   library(Seurat)
   library(ggplot2)
   library(dplyr)
   library(ggrepel)
-  library(grid)   # for unit()
+  library(grid)  
 })
 
 # =========================
@@ -74,7 +74,7 @@ if (!"umap" %in% Reductions(seurat_integrated)) {
 cat("✓ Object loaded\n")
 
 # ============================================
-# 15. UMAP plot (by cluster)
+# 1. UMAP plot (by cluster)
 # ============================================
 
 cat("\n=== CLUSTER UMAP EXPORTS ===\n")
@@ -177,19 +177,7 @@ ggsave(
 cat("✓ Cluster UMAP saved\n")
 
 # ============================================
-# Save intermediate object (before annotations)
-# ============================================
-
-saveRDS(
-  seurat_integrated,
-  file = file.path(object_dir, "seurat_integrated_clustered.rds")
-)
-
-cat("\n✓ Intermediate object saved (before annotations)\n")
-cat("\n✓✓✓ INTEGRATION & CLUSTERING COMPLETE ✓✓✓\n\n")
-
-# ============================================
-# 15A. UMAP with res = 0.3 - colors matched to res = 0.4
+# 2. UMAP with res = 0.3 with no labels
 # ============================================
 
 cat("\nGenerating UMAP for res = 0.3...\n")
@@ -284,7 +272,7 @@ ggsave(
 cat("✓ UMAP (res = 0.3) cluster plot saved\n")
 
 # ============================================
-# 15B. UMAP with res = 0.4 with no labels
+# 3. UMAP with res = 0.4 with no labels
 # ============================================
 
 cat("\nGenerating UMAP for res = 0.4...\n")
@@ -348,6 +336,14 @@ ggsave(
   p_umap_res04, width = 10, height = 8, dpi = 600
 )
 
-cat("✓ UMAP (res = 0.4) cluster plot saved\n")
-cat("\n✓✓✓ CLUSTER PLOTTING COMPLETE ✓✓✓\n\n")
+# ============================================
+# 4. Save intermediate object (before annotations)
+# ============================================
 
+saveRDS(
+  seurat_integrated,
+  file = file.path(object_dir, "seurat_integrated_clustered.rds")
+)
+
+cat("\n✓ Intermediate object saved (before annotations)\n")
+cat("\n✓✓✓ INTEGRATION & CLUSTERING COMPLETE ✓✓✓\n\n")
