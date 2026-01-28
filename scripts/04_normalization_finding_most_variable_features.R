@@ -21,7 +21,7 @@
 # =============================================================================
 
 # =========================
-# Libraries (required)
+# Libraries 
 # =========================
 suppressPackageStartupMessages({
   library(Seurat)
@@ -30,7 +30,7 @@ suppressPackageStartupMessages({
   library(stringr)
   library(ggplot2)
   library(ggrepel)
-  library(grid)    # for unit()
+  library(grid)    
 })
 
 # =========================
@@ -168,5 +168,3 @@ out_obj <- file.path(object_dir, "seurat_norm_hvg.rds")
 saveRDS(seurat_obj_filtered, out_obj)
 
 cat("\n✓ Saved normalized + HVG object: ", out_obj, "\n")
-cat("\n✓✓✓ NORMALIZATION + HVG COMPLETE ✓✓✓\n\n")
-
