@@ -155,9 +155,9 @@ cat("  Median %MT     :", round(c4$median_pct_mt, 3),
     sprintf("(%+.3f vs global median %.3f)", c4$mt_diff, global_mt), "\n\n")
 
 # =============================================================================
-# 3) CLUSTER 4 TOP MARKERS BAR PLOT - ROBUST ANNOTATION
+# 3) CLUSTER 4 TOP MARKERS BAR PLOT - ANNOTATION
 # =============================================================================
-cat("=== 1A) Cluster 4 top markers grouped by type ===\n")
+cat("=== 3) Cluster 4 top markers grouped by type ===\n")
 
 markers_path <- file.path(table_dir, "top20_markers_per_cluster_res0.4.csv")
 if (!file.exists(markers_path)) {
@@ -186,14 +186,14 @@ top_c4 <- markers_tbl %>%
         "TMSB4X", "TMSB10", "CFL1", "MYL6"
       ) ~ "Cytoskeleton (ubiquitous)",
       
-      # ---- Ubiquitous: Translation/Ribosomal ----
+      # ---- Ubiquitous: RNA Translation ----
       grepl("^EIF", gene) |
         grepl("^RPL", gene) |
         grepl("^RPS", gene) |
         gene %in% c(
           "SNRPD2", "SNRPG", "SNRPE",
           "EEF1A1", "EEF2", "PABPC1"
-        ) ~ "Translation (ubiquitous)",
+        ) ~ "RNA Translation (ubiquitous)",
       
       # ---- Ubiquitous: Metabolism ----
       gene %in% c(
@@ -207,7 +207,7 @@ top_c4 <- markers_tbl %>%
     type = factor(type, levels = c(
       "Immune",
       "Cytoskeleton (ubiquitous)",
-      "Translation (ubiquitous)",
+      "RNA Translation (ubiquitous)",
       "Metabolism (ubiquitous)",
       "Other / unclear"
     ))
@@ -226,7 +226,7 @@ print(type_summary)
 type_cols <- c(
   "Immune"                       = "#F8766D",
   "Cytoskeleton (ubiquitous)"    = "#A3A500",
-  "Translation (ubiquitous)"     = "#00BF7D",
+  "RNA Translation (ubiquitous)"     = "#00BF7D",
   "Metabolism (ubiquitous)"      = "#00B0F6",
   "Other / unclear"              = "#E76BF3"
 )
