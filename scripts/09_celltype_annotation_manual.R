@@ -236,7 +236,7 @@ pal_early <- c("white", "#F46D43")
 pal_late  <- c("white", "#31A354")
 
 # --- legend title ---
-expr_legend_title <- "Average \nrelative expression"
+expr_legend_title <- "Average \nrelative expression \nwith respect to other clusters"
 
 # --- colorbar sizing ---
 cb_h <- unit(62, "mm")
