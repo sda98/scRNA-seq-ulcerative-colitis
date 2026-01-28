@@ -4,11 +4,10 @@
 # 04_normalization_finding_most_variable_features.R
 #
 # Purpose:
-#   6) Normalize RNA counts using Seurat LogNormalize (scale.factor = 10,000)
-#   7) Identify highly variable genes (HVGs) using vst (nfeatures = 2000)
-#      - Print top 10 HVGs
-#      - Save a styled HVG scatter plot (mean vs standardized variance)
-#   8) Save the normalized + HVG-annotated Seurat object for downstream steps
+#   1) Normalize RNA counts using Seurat LogNormalize (scale.factor = 10,000)
+#   2) Identify highly variable genes (HVGs) using vst (nfeatures = 2000)
+#   3) Save a styled HVG scatter plot (mean vs standardized variance)
+#   4) Save the normalized + HVG-annotated Seurat object for downstream steps
 #
 # Inputs:
 #   results/01_quality_control/objects/seurat_singlets.rds
@@ -67,7 +66,7 @@ if (!"RNA" %in% names(seurat_obj_filtered@assays)) {
 }
 
 # =============================================================================
-# 6) NORMALIZATION (LogNormalize)
+# 1) NORMALIZATION (LogNormalize)
 # =============================================================================
 cat("\n=== NORMALIZATION ===\n")
 cat("Using LogNormalize (standard Seurat workflow)\n\n")
@@ -81,7 +80,7 @@ seurat_obj_filtered <- NormalizeData(
 cat("✓ Normalization complete\n")
 
 # =============================================================================
-# 7) FIND VARIABLE FEATURES
+# 2) FIND VARIABLE FEATURES
 # =============================================================================
 cat("\nFinding variable features...\n")
 seurat_obj_filtered <- FindVariableFeatures(
@@ -95,7 +94,7 @@ top10 <- head(VariableFeatures(seurat_obj_filtered), 10)
 print(top10)
 
 # =============================================================================
-# 7b) HVG PLOT (STYLED)
+# 3) HVG PLOT 
 # =============================================================================
 p0 <- VariableFeaturePlot(seurat_obj_filtered)
 df_hvg <- p0$data
@@ -163,7 +162,7 @@ ggsave(
 cat("✓ Variable features plot saved\n")
 
 # =============================================================================
-# 8) SAVE OBJECT FOR DOWNSTREAM SCRIPTS
+# 4) SAVE OBJECT FOR DOWNSTREAM SCRIPTS
 # =============================================================================
 out_obj <- file.path(object_dir, "seurat_norm_hvg.rds")
 saveRDS(seurat_obj_filtered, out_obj)
