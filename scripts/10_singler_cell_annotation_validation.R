@@ -1,26 +1,30 @@
-#!/usr/bin/env Rscript
+!/usr/bin/env Rscript
 
 # =============================================================================
 # 10_singler_cell_annotation_validation.R
 #
 # Purpose:
-#   1) Load annotated Seurat object (manual labels already added)
-#   2) Run SingleR with Human Primary Cell Atlas reference 
-#   3) Export distribution tables + cross-tab (manual vs SingleR)
-#   4) Save updated Seurat object
+#   1) Load Seurat object that already contains manual cell type labels (celltype_final).
+#   2) Run SingleR using the Human Primary Cell Atlas reference (celldex) for validation.
+#   3) Export:
+#        - SingleR label distribution table
+#        - Manual vs SingleR cross-tabulation
+#        - Dominant SingleR label per Manual label (simple mapping table)
+#   4) Save Seurat object with SingleR metadata added.
 #
-# Inputs:
+# Input:
 #   results/02_clustering_analysis/objects/seurat_integrated_annotated.rds
 #
 # Outputs:
 #   results/02_clustering_analysis/sessionInfo.txt
 #   results/02_clustering_analysis/tables/singler_label_counts.csv
-#   results/02_clustering_analysis/tables/final_vs_singler_crosstab.csv
+#   results/02_clustering_analysis/tables/manual_vs_singler_crosstab.csv
+#   results/02_clustering_analysis/tables/dominant_singler_cluster_per_manual.csv
 #   results/02_clustering_analysis/objects/seurat_integrated_annotated_singler.rds
 #
 # Notes:
-#   - Uses RNA assay (log-normalized "data" layer) as input to SingleR.
-#   - SerialParam is used for reproducibility (safe on most machines).
+#   - Uses RNA assay, log-normalized expression values from the "data" layer.
+#   - Uses SerialParam() to run SingleR in a single process (most reproducible, and the safest option).
 # =============================================================================
 
 suppressPackageStartupMessages({
@@ -119,8 +123,24 @@ cross_tab <- table(
 
 write.csv(
   as.data.frame.matrix(cross_tab),
-  file.path(table_dir, "final_vs_singler_crosstab.csv"),
+  file.path(table_dir, "manual_vs_singler_crosstab.csv"),
   row.names = TRUE
+)
+
+cat("\n=== Dominant SingleR label per Manual label ===\n")
+
+dominant_map <- data.frame(
+  Manual  = rownames(cross_tab),
+  SingleR = apply(cross_tab, 1, function(x) names(which.max(x))),
+  stringsAsFactors = FALSE
+)
+
+print(dominant_map, row.names = FALSE)
+
+write.csv(
+  dominant_map,
+  file.path(table_dir, "dominant_singler_cluster_per_manual.csv"),
+  row.names = FALSE
 )
 
 cat("✓ Cross-tabulation saved\n")
@@ -133,4 +153,3 @@ saveRDS(seurat_integrated, out_obj)
 
 cat("\n✓ Saved object with SingleR metadata: ", out_obj, "\n")
 cat("\n✓✓✓ SingleR validation complete ✓✓✓\n\n")
-
