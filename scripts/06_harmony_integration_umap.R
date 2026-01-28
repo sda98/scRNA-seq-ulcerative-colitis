@@ -7,7 +7,7 @@
 #   1) Visualize batch effects (sample-level variation) BEFORE integration
 #      - Run UMAP on PCA embeddings (dims = 1:ncomp)
 #      - Plot UMAP colored by sample_label
-#   2) Perform Harmony integration (gentle batch correction) using sample_id
+#   2) Perform Harmony integration (batch correction) using sample_id
 #   3) Run standard workflow on Harmony embeddings
 #      - UMAP + neighbors + clustering across multiple resolutions
 #      - Set a default clustering resolution (0.4)
@@ -82,12 +82,6 @@ if (!"sample_id" %in% colnames(seurat_obj_filtered@meta.data)) {
   stop("Metadata column 'sample_id' not found. Needed for Harmony integration.")
 }
 
-# Determine ncomp (self-contained)
-n_pcs_available <- ncol(Embeddings(seurat_obj_filtered, "pca"))
-ncomp <- min(30, n_pcs_available)
-cat("PCA dimensions available:", n_pcs_available, "\n")
-cat("Using ncomp =", ncomp, "for UMAP/Harmony/neighbors/clustering\n\n")
-
 # =============================================================================
 # 1) VISUALIZE BATCH EFFECTS BY SAMPLE (BEFORE INTEGRATION)
 # =============================================================================
@@ -99,7 +93,7 @@ cat("Visualizing sample-level variation before integration\n")
 # ============================================
 cat("\nRunning UMAP on non-integrated data...\n")
 DefaultAssay(seurat_obj_filtered) <- "RNA"
-seurat_obj_filtered <- RunUMAP(seurat_obj_filtered, dims = 1:ncomp, verbose = FALSE)
+seurat_obj_filtered <- RunUMAP(seurat_obj_filtered, dims = 1:ncomp, verbose = TRUE)
 
 # ============================================
 # Color by SAMPLE (12 samples)
@@ -147,7 +141,8 @@ p_umap_sample <- DimPlot(
     legend.position = "right",
     legend.spacing.y = grid::unit(0.5, "cm"),
     legend.key.height = grid::unit(1, "cm")
-  )
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 6)))
 
 ggsave(
   file.path(plot_dir, "umap_BEFORE_integration_by_sample.png"),
@@ -166,7 +161,7 @@ cat("Using Harmony for gentle batch correction\n\n")
 seurat_integrated <- RunHarmony(
   seurat_obj_filtered,
   group.by.vars = "sample_id",
-  plot_convergence = TRUE,
+  plot_convergence = FALSE,
   verbose = TRUE
 )
 
@@ -189,7 +184,7 @@ seurat_integrated <- RunUMAP(
   seurat_integrated,
   reduction = "harmony",
   dims = 1:ncomp,
-  verbose = FALSE
+  verbose = TRUE
 )
 cat("✓ UMAP computed\n")
 
@@ -198,7 +193,7 @@ seurat_integrated <- FindNeighbors(
   seurat_integrated,
   reduction = "harmony",
   dims = 1:ncomp,
-  verbose = FALSE
+  verbose = TRUE
 )
 cat("✓ Neighbors computed\n")
 
@@ -207,7 +202,7 @@ set.seed(5)
 seurat_integrated <- FindClusters(
   seurat_integrated,
   resolution = c(0.05, 0.1, 0.3, 0.4, 0.5, 0.8, 1),
-  verbose = FALSE
+  verbose = TRUE
 )
 
 # Check how many clusters each gives
@@ -254,7 +249,8 @@ p_umap_after_sample <- DimPlot(
     legend.position = "right",
     legend.spacing.y = grid::unit(0.5, "cm"),
     legend.key.height = grid::unit(1, "cm")
-  )
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 6)))
 
 ggsave(
   file.path(plot_dir, "umap_AFTER_integration_by_sample.png"),
