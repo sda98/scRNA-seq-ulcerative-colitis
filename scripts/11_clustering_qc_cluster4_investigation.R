@@ -1,35 +1,35 @@
 #!/usr/bin/env Rscript
 
 # =============================================================================
-# 09_clustering_qc_cluster4_investigation.R
+# 11_clustering_qc_cluster4_investigation.R
 #
-# Purpose (defensible QC investigation of a problematic cluster):
-#   1) Summarize QC metrics per cluster (res=0.4) to flag suspicious clusters.
-#   2) Evaluate Cluster 4 distribution across samples (composition).
-#   3) Compare Cluster 4 vs all other cells using per-sample paired medians
-#      (defensible; avoids cell-level p-values / pseudoreplication).
-#   4) Visualize:
-#       - Pie chart: Cluster 4 composition across samples (white background).
-#       - Spaghetti plots: per-sample medians (Cluster 4 vs Others) with p-values.
+# Purpose:
+#   Investigate whether Cluster 4 (res=0.4) represents low-quality cells
+#   that should be removed before downstream analysis.
+#
+# Visualizations:
+#   - Bar plot: Cluster 4 top-20 markers by functional category
+#   - Pie chart: Cluster 4 distribution across samples
+#   - Bar plot: QC metrics comparison (Cluster 4 vs Others) with p-values
 #
 # Inputs:
 #   results/02_clustering_analysis/objects/seurat_integrated_clustered.rds
+#   results/02_clustering_analysis/tables/top20_markers_per_cluster_res0.4.csv
 #
 # Outputs (tables):
 #   results/02_clustering_analysis/tables/qc_by_cluster_res0.4.csv
+#   results/02_clustering_analysis/tables/cluster4_top20_markers_by_type.csv
 #   results/02_clustering_analysis/tables/cluster4_sample_composition.csv
 #   results/02_clustering_analysis/tables/cluster4_vs_others_by_sample.csv
 #   results/02_clustering_analysis/tables/cluster4_vs_others_paired_tests.csv
 #
 # Outputs (plots):
+#   results/02_clustering_analysis/plots/cluster4_top20_markers_by_type.png
 #   results/02_clustering_analysis/plots/cluster4_composition_pie.png
 #   results/02_clustering_analysis/plots/qc_cluster4_vs_others_by_sample.png
 #
-# Notes:
-#   - Requires meta.data columns: nFeature_RNA, nCount_RNA, percent.mt
-#   - Requires clustering column: RNA_snn_res.0.4
-#   - Uses sample_id (preferred) or gsm_id for per-sample pairing
-#   - Reports raw p-values (no multiple testing correction; small targeted QC set)
+# =============================================================================
+#
 # =============================================================================
 
 # =========================
@@ -40,6 +40,8 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(tidyr)
   library(ggplot2)
+  library(ggh4x)
+  library(ggtext)
 })
 
 # =========================
@@ -66,79 +68,61 @@ table_dir <- file.path(out_dir, "tables")
 dir.create(plot_dir,  recursive = TRUE, showWarnings = FALSE)
 dir.create(table_dir, recursive = TRUE, showWarnings = FALSE)
 
-writeLines(capture.output(sessionInfo()), file.path(out_dir, "sessionInfo_09.txt"))
+writeLines(capture.output(sessionInfo()), file.path(out_dir, "sessionInfo_11.txt"))
 
 # =========================
-# Load object
+# 1) LOAD SEURAT OBJECT
 # =========================
 cat("\n")
 cat(paste(rep("=", 80), collapse = ""), "\n")
-cat("  CLUSTER 4 QC INVESTIGATION (DEFENSIBLE: SAMPLE-LEVEL)\n")
+cat("  CLUSTER 4 QC INVESTIGATION\n")
 cat(paste(rep("=", 80), collapse = ""), "\n\n")
 
-seurat_obj <- readRDS(in_obj)
+seurat_integrated <- readRDS(in_obj)
 
 required_cols <- c("nFeature_RNA", "nCount_RNA", "percent.mt", "RNA_snn_res.0.4")
-missing <- setdiff(required_cols, colnames(seurat_obj@meta.data))
+missing <- setdiff(required_cols, colnames(seurat_integrated@meta.data))
 if (length(missing) > 0) {
   stop("Missing metadata columns: ", paste(missing, collapse = ", "))
 }
 
-# Set identities
-Idents(seurat_obj) <- "RNA_snn_res.0.4"
-DefaultAssay(seurat_obj) <- "RNA"
+Idents(seurat_integrated) <- "RNA_snn_res.0.4"
+DefaultAssay(seurat_integrated) <- "RNA"
 
-# Confirm cluster 4 exists
-if (!"4" %in% levels(Idents(seurat_obj))) {
+if (!"4" %in% levels(Idents(seurat_integrated))) {
   stop("Cluster '4' not found in RNA_snn_res.0.4 identities.")
 }
 
-# Sample column for pairing
-sample_col <- if ("sample_id" %in% colnames(seurat_obj@meta.data)) {
+sample_col <- if ("sample_id" %in% colnames(seurat_integrated@meta.data)) {
   "sample_id"
-} else if ("gsm_id" %in% colnames(seurat_obj@meta.data)) {
+} else if ("gsm_id" %in% colnames(seurat_integrated@meta.data)) {
   "gsm_id"
 } else {
   stop("No sample identifier found (expected 'sample_id' or 'gsm_id').")
 }
 
 cat("Sample column used for pairing:", sample_col, "\n")
-cat("Total cells:", ncol(seurat_obj), "\n")
-cat("Total clusters (res=0.4):", length(unique(Idents(seurat_obj))), "\n\n")
+cat("Total cells:", ncol(seurat_integrated), "\n")
+cat("Total clusters (res=0.4):", length(unique(Idents(seurat_integrated))), "\n\n")
 
-# Cluster 4 flag (for plotting)
-seurat_obj$cluster4_flag <- ifelse(as.character(Idents(seurat_obj)) == "4", "Cluster 4", "Other clusters")
-seurat_obj$cluster4_flag <- factor(seurat_obj$cluster4_flag, levels = c("Other clusters", "Cluster 4"))
-
-# =========================
-# Plot theme (your style)
-# =========================
-theme_pub <- function(base_size = 30) {
-  theme_classic(base_size = base_size) +
-    theme(
-      axis.title = element_text(face = "bold", size = 34),
-      axis.text  = element_text(size = 28),
-      legend.title = element_text(face = "bold", size = 26),
-      legend.text  = element_text(size = 20),
-      plot.title   = element_text(face = "bold", size = 34)
-    )
-}
+seurat_integrated$cluster4_flag <- ifelse(as.character(Idents(seurat_integrated)) == "4", "Cluster 4", "Other clusters")
+seurat_integrated$cluster4_flag <- factor(seurat_integrated$cluster4_flag, levels = c("Other clusters", "Cluster 4"))
 
 # =============================================================================
-# 1) QC SUMMARY BY CLUSTER
+# 2) QC SUMMARY BY CLUSTER
 # =============================================================================
 cat("=== 1) QC Summary by Cluster (res=0.4) ===\n")
 
-global_nFeature <- median(seurat_obj$nFeature_RNA, na.rm = TRUE)
-global_nCount   <- median(seurat_obj$nCount_RNA,   na.rm = TRUE)
-global_mt       <- median(seurat_obj$percent.mt,   na.rm = TRUE)
+global_nFeature <- median(seurat_integrated$nFeature_RNA, na.rm = TRUE)
+global_nCount   <- median(seurat_integrated$nCount_RNA,   na.rm = TRUE)
+global_mt       <- median(seurat_integrated$percent.mt,   na.rm = TRUE)
 
-qc_summary <- seurat_obj@meta.data %>%
+qc_summary <- seurat_integrated@meta.data %>%
   dplyr::mutate(cluster = as.character(RNA_snn_res.0.4)) %>%
   dplyr::group_by(cluster) %>%
   dplyr::summarise(
     n_cells = dplyr::n(),
-    pct_total = 100 * n_cells / ncol(seurat_obj),
+    pct_total = 100 * n_cells / ncol(seurat_integrated),
     median_nFeature = median(nFeature_RNA, na.rm = TRUE),
     median_nCount   = median(nCount_RNA,   na.rm = TRUE),
     median_pct_mt   = median(percent.mt,   na.rm = TRUE),
@@ -153,7 +137,6 @@ qc_summary <- seurat_obj@meta.data %>%
   dplyr::arrange(as.numeric(cluster))
 
 print(qc_summary, n = 50)
-
 write.csv(qc_summary, file.path(table_dir, "qc_by_cluster_res0.4.csv"), row.names = FALSE)
 cat("✓ Saved qc_by_cluster_res0.4.csv\n\n")
 
@@ -165,14 +148,96 @@ cat("  Median nFeature:", c4$median_nFeature,
 cat("  Median nCount  :", c4$median_nCount,
     sprintf("(%+.1f%% vs global median %d)", c4$nCount_pct_diff, global_nCount), "\n")
 cat("  Median %MT     :", round(c4$median_pct_mt, 3),
-    sprintf("(Δ %+.3f vs global median %.3f)", c4$mt_diff, global_mt), "\n\n")
+    sprintf("(%+.3f vs global median %.3f)", c4$mt_diff, global_mt), "\n\n")
 
 # =============================================================================
-# 2) SAMPLE COMPOSITION (Cluster 4)
+# 1A) CLUSTER 4 TOP MARKERS BAR PLOT
+# =============================================================================
+cat("=== 1A) Cluster 4 top markers grouped by type ===\n")
+
+markers_path <- file.path(table_dir, "top20_markers_per_cluster_res0.4.csv")
+if (!file.exists(markers_path)) {
+  stop("Missing markers file: ", markers_path)
+}
+
+markers_tbl <- read.csv(markers_path, stringsAsFactors = FALSE)
+
+top_c4 <- markers_tbl %>%
+  filter(cluster == 4) %>%
+  arrange(desc(avg_log2FC)) %>%
+  slice_head(n = 20) %>%
+  mutate(
+    type = case_when(
+      gene %in% c("LTB", "CORO1A", "RAC2", "KLRB1", "CD52", "ARHGDIB") ~ "Immune / lymphocyte",
+      gene %in% c("ACTB", "PFN1", "ARPC3", "COTL1", "TMSB4X")         ~ "Cytoskeleton / actin",
+      grepl("^EIF", gene) | gene %in% c("SNRPD2")                     ~ "Translation / RNA processing",
+      gene %in% c("LDHB")                                             ~ "Metabolism",
+      TRUE                                                            ~ "Other / unclear"
+    ),
+    type = factor(type, levels = c(
+      "Immune / lymphocyte",
+      "Cytoskeleton / actin",
+      "Translation / RNA processing",
+      "Metabolism",
+      "Other / unclear"
+    ))
+  )
+
+write.csv(top_c4, file.path(table_dir, "cluster4_top20_markers_by_type.csv"), row.names = FALSE)
+
+# Colors
+type_cols <- c(
+  "Immune / lymphocyte"          = "#F8766D",
+  "Cytoskeleton / actin"         = "#A3A500",
+  "Translation / RNA processing" = "#00BF7D",
+  "Metabolism"                   = "#00B0F6",
+  "Other / unclear"              = "#E76BF3"
+)
+
+# Order genes within each type by lfc
+top_c4 <- top_c4 %>%
+  arrange(type, avg_log2FC) %>%
+  mutate(gene = factor(gene, levels = gene))
+
+# Panel heights proportional to gene count
+panel_heights <- top_c4 %>% count(type) %>% pull(n)
+
+# Plot
+p_markers <- ggplot(top_c4, aes(x = gene, y = avg_log2FC, fill = type)) +
+  geom_hline(yintercept = 0, color = "black", linewidth = 2.5) +
+  geom_col(color = "black", linewidth = 0.4, width = 0.8) +
+  coord_flip() +
+  facet_wrap(~ type, ncol = 1, scales = "free_y") +
+  scale_fill_manual(values = type_cols) +
+  scale_y_continuous(limits = c(0, 2), breaks = seq(0, 2, 0.5), expand = c(0, 0)) +
+  labs(title = "Cluster 4 top-20 markers", x = NULL, y = expression(bold("Average Log"[2]*"FC"))) +
+  theme_classic(base_size = 18) +
+  theme(
+    plot.title = element_text(size = 60, face = "bold", margin = margin(b = 40, unit = "pt")),
+    axis.text.x = element_text(size = 50, color = "black"),
+    axis.text.y = element_text(size = 28, face = "bold.italic", color = "black"),
+    axis.title.x = element_text(size = 33, face = "bold"),
+    strip.text = element_text(size = 34, face = "bold"),
+    strip.background = element_rect(fill = "grey95", color = "black", linewidth = 0.6),
+    legend.position = "none"
+  ) +
+  ggh4x::force_panelsizes(rows = panel_heights) +
+  ggh4x::facetted_pos_scales(y = list(scale_y_continuous(limits = c(0, 1.55), breaks = seq(0, 1.5, 0.5))))
+
+ggsave(
+  file.path(plot_dir, "cluster4_top20_markers_by_type.png"),
+  p_markers,
+  width = 13, height = 18, dpi = 600,
+  bg = "white"
+)
+cat("✓ Saved cluster4_top_markers_by_type.png\n")
+
+# =============================================================================
+# 3) SAMPLE COMPOSITION (Cluster 4)
 # =============================================================================
 cat("=== 2) Cluster 4 Sample Composition ===\n")
 
-composition <- seurat_obj@meta.data %>%
+composition <- seurat_integrated@meta.data %>%
   dplyr::mutate(
     cluster = as.character(RNA_snn_res.0.4),
     sample  = .data[[sample_col]]
@@ -198,30 +263,26 @@ top_sample_contribution <- 100 * max(c4_comp$n) / c4_total
 cat("\nCluster 4 is present in", nrow(c4_comp), "samples.\n")
 cat("Top sample contributes", round(top_sample_contribution, 1), "% of Cluster 4 cells.\n")
 
-if (top_sample_contribution > 80) {
-  cat("⚠ Note: Cluster 4 is highly concentrated in a single sample (possible batch/sample-specific effect).\n\n")
-} else {
-  cat("✓ Cluster 4 is distributed across samples (less likely to be single-sample artifact).\n\n")
-}
-
 # =============================================================================
-# 2A) PIE CHART: Cluster 4 composition by sample (white background, readable labels)
+# 4) PIE CHART: Cluster 4 composition by sample
 # =============================================================================
 cat("Creating pie chart...\n")
 
-sample_plot_col <- if ("sample_label" %in% colnames(seurat_obj@meta.data)) "sample_label" else sample_col
+sample_plot_col <- if ("sample_label" %in% colnames(seurat_integrated@meta.data)) "sample_label" else sample_col
 
-c4_comp_plot <- seurat_obj@meta.data %>%
-  dplyr::mutate(
+c4_comp_plot <- seurat_integrated@meta.data %>%
+  mutate(
     cluster = as.character(RNA_snn_res.0.4),
     sample_plot = .data[[sample_plot_col]]
   ) %>%
-  dplyr::filter(cluster == "4") %>%
-  dplyr::count(sample_plot, name = "n") %>%
-  dplyr::mutate(pct_of_c4 = 100 * n / sum(n)) %>%
-  dplyr::arrange(desc(n)) %>%
-  dplyr::mutate(
-    label = ifelse(pct_of_c4 >= 5, paste0(sample_plot, "\n", round(pct_of_c4, 1), "%"), "")
+  filter(cluster == "4") %>%
+  count(sample_plot, name = "n") %>%
+  mutate(pct_of_c4 = 100 * n / sum(n)) %>%
+  arrange(desc(n)) %>%
+  mutate(
+    sample_plot = factor(sample_plot, levels = sample_plot),
+    legend_label = paste0(sample_plot, " (", round(pct_of_c4, 1), "%)"),
+    legend_label = factor(legend_label, levels = legend_label)
   )
 
 base_sample_colors <- c(
@@ -229,56 +290,53 @@ base_sample_colors <- c(
   "#FF7F00", "#FFFF33", "#A65628", "#F781BF",
   "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3"
 )
-samples_unique <- c4_comp_plot$sample_plot
-sample_colors <- rep(base_sample_colors, length.out = length(samples_unique))
-names(sample_colors) <- samples_unique
-
-.hex_luma <- function(hex) {
-  rgb <- grDevices::col2rgb(hex) / 255
-  0.2126 * rgb[1, ] + 0.7152 * rgb[2, ] + 0.0722 * rgb[3, ]
-}
-c4_comp_plot$fill <- sample_colors[c4_comp_plot$sample_plot]
-c4_comp_plot$label_color <- ifelse(.hex_luma(c4_comp_plot$fill) < 0.55, "white", "black")
+samples_unique <- levels(c4_comp_plot$sample_plot)
+sample_colors <- setNames(
+  rep(base_sample_colors, length.out = length(samples_unique)),
+  samples_unique
+)
 
 p_pie <- ggplot(c4_comp_plot, aes(x = "", y = n, fill = sample_plot)) +
   geom_col(width = 1, color = "black", linewidth = 0.6) +
   coord_polar(theta = "y") +
-  geom_text(
-    aes(label = label, color = label_color),
-    position = position_stack(vjust = 0.5),
-    size = 5,
-    fontface = "bold",
-    lineheight = 0.9,
-    show.legend = FALSE
+  scale_fill_manual(
+    values = sample_colors,
+    labels = paste0(c4_comp_plot$sample_plot, " (**", round(c4_comp_plot$pct_of_c4, 1), "%**)"),
+    breaks = c4_comp_plot$sample_plot
   ) +
-  scale_fill_manual(values = sample_colors) +
-  scale_color_identity() +
-  labs(fill = "Sample") +
+  labs(
+    title = "Cluster 4 sample composition",
+    fill = "Sample"
+  ) +
   theme_void(base_size = 30) +
   theme(
-    legend.title = element_text(face = "bold", size = 26),
-    legend.text  = element_text(size = 20),
+    plot.title = element_text(face = "bold", size = 50, hjust = 0.5),
+    legend.title = element_text(face = "bold", size = 35),
+    legend.text = ggtext::element_markdown(size = 25),
+    legend.key.size = unit(1, "cm"),
+    legend.key.spacing.y = unit(0.5, "cm"),
     legend.position = "right",
-    plot.background  = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
     panel.background = element_rect(fill = "white", color = NA)
-  )
+  ) +
+  guides(fill = guide_legend(byrow = TRUE))
 
 ggsave(
   file.path(plot_dir, "cluster4_composition_pie.png"),
   p_pie,
-  width = 14, height = 10, dpi = 600,
+  width = 16, height = 12, dpi = 600,
   bg = "white"
 )
 cat("✓ Saved cluster4_composition_pie.png\n\n")
 
 # =============================================================================
-# 3) PER-SAMPLE PAIRED COMPARISON (DEFENSIBLE)
+# 5) PER-SAMPLE PAIRED COMPARISON (DEFENSIBLE)
 # =============================================================================
 cat("=== 3) Per-sample paired comparison (Cluster 4 vs Others) ===\n")
 
 min_c4_cells <- 20
 
-by_sample <- seurat_obj@meta.data %>%
+by_sample <- seurat_integrated@meta.data %>%
   dplyr::mutate(
     sample = .data[[sample_col]],
     group  = ifelse(as.character(RNA_snn_res.0.4) == "4", "C4", "Other")
@@ -310,25 +368,25 @@ cat("✓ Saved cluster4_vs_others_by_sample.csv\n")
 
 paired_test_results <- NULL
 if (nrow(by_sample) >= 4) {
-
+  
   test_nf <- wilcox.test(by_sample$med_nFeature_C4, by_sample$med_nFeature_Other, paired = TRUE)
   test_nc <- wilcox.test(by_sample$med_nCount_C4,   by_sample$med_nCount_Other,   paired = TRUE)
   test_mt <- wilcox.test(by_sample$med_mt_C4,       by_sample$med_mt_Other,       paired = TRUE)
-
+  
   pvals <- c(nFeature_RNA = test_nf$p.value, nCount_RNA = test_nc$p.value, percent.mt = test_mt$p.value)
-
+  
   effects <- c(
     nFeature_RNA = median(by_sample$diff_nFeature, na.rm = TRUE),
     nCount_RNA   = median(by_sample$diff_nCount,   na.rm = TRUE),
     percent.mt   = median(by_sample$diff_mt,       na.rm = TRUE)
   )
-
+  
   pct_effects <- c(
     nFeature_RNA = median(by_sample$pct_diff_nFeature, na.rm = TRUE),
     nCount_RNA   = median(by_sample$pct_diff_nCount,   na.rm = TRUE),
     percent.mt   = NA_real_
   )
-
+  
   paired_test_results <- data.frame(
     metric = names(pvals),
     n_samples = nrow(by_sample),
@@ -337,95 +395,109 @@ if (nrow(by_sample) >= 4) {
     p_value = signif(pvals, 3),
     stringsAsFactors = FALSE
   )
-
+  
   write.csv(
     paired_test_results,
     file.path(table_dir, "cluster4_vs_others_paired_tests.csv"),
     row.names = FALSE
   )
   cat("✓ Saved cluster4_vs_others_paired_tests.csv\n\n")
-
+  
   cat("Paired Wilcoxon tests (per-sample medians; raw p-values):\n")
   print(paired_test_results)
-
+  
 } else {
   cat("Insufficient samples (need >=4) for paired Wilcoxon testing.\n")
 }
 
 # =============================================================================
-# 4) PLOT: Paired spaghetti plot with p-values on facets
+# 6) PLOT: Bar plot comparing Cluster 4 vs Others (per-sample medians)
 # =============================================================================
-cat("\n=== Plotting paired spaghetti (per-sample medians) ===\n")
-
+cat("\n=== Plotting bar comparison (per-sample medians) ===\n")
 if (nrow(by_sample) >= 4) {
-
-  spaghetti_df <- by_sample %>%
-    dplyr::select(
-      sample,
-      med_nFeature_C4, med_nFeature_Other,
-      med_nCount_C4,   med_nCount_Other,
-      med_mt_C4,       med_mt_Other
-    ) %>%
-    tidyr::pivot_longer(-sample, names_to = "var", values_to = "value") %>%
-    tidyr::separate(var, into = c("stat", "metric", "group"), sep = "_", extra = "merge") %>%
-    dplyr::mutate(
-      group = factor(group, levels = c("Other", "C4"), labels = c("Other clusters", "Cluster 4")),
-      metric = factor(metric, levels = c("nFeature", "nCount", "mt"),
-                      labels = c("nFeature_RNA", "nCount_RNA", "percent.mt"))
+  
+  # Calculate mean of per-sample medians for each group
+  bar_df <- data.frame(
+    metric = factor(c("nFeature_RNA", "nCount_RNA", "percent.mt",
+                      "nFeature_RNA", "nCount_RNA", "percent.mt"),
+                    levels = c("nFeature_RNA", "nCount_RNA", "percent.mt"),
+                    labels = c("nFeature_RNA", "nCount_RNA", "Mitochondrial reads (%)")),
+    group = factor(rep(c("Other clusters", "Cluster 4"), each = 3),
+                   levels = c("Other clusters", "Cluster 4")),
+    value = c(
+      mean(by_sample$med_nFeature_Other),
+      mean(by_sample$med_nCount_Other),
+      mean(by_sample$med_mt_Other),
+      mean(by_sample$med_nFeature_C4),
+      mean(by_sample$med_nCount_C4),
+      mean(by_sample$med_mt_C4)
+    ),
+    sd = c(
+      sd(by_sample$med_nFeature_Other),
+      sd(by_sample$med_nCount_Other),
+      sd(by_sample$med_mt_Other),
+      sd(by_sample$med_nFeature_C4),
+      sd(by_sample$med_nCount_C4),
+      sd(by_sample$med_mt_C4)
     )
-
+  )
+  
+  # Annotation with p-values
   ann <- paired_test_results %>%
-    dplyr::mutate(
-      metric = factor(metric, levels = c("nFeature_RNA", "nCount_RNA", "percent.mt")),
-      label = dplyr::case_when(
-        metric == "percent.mt" ~ paste0("p = ", p_value, "\nΔmedian = ", effect_median_delta),
-        TRUE ~ paste0("p = ", p_value, "\nΔmedian = ", effect_median_delta,
-                      " (", effect_median_pct, "%)")
+    mutate(
+      metric = factor(metric, 
+                      levels = c("nFeature_RNA", "nCount_RNA", "percent.mt"),
+                      labels = c("nFeature_RNA", "nCount_RNA", "Mitochondrial reads (%)")),
+      label = case_when(
+        metric == "Mitochondrial reads (%)" ~ paste0("p = ", p_value, "\nΔ = ", effect_median_delta),
+        TRUE ~ paste0("p = ", p_value, "\nΔ = ", effect_median_delta, " (", effect_median_pct, "%)")
       )
-    ) %>%
-    dplyr::select(metric, label)
-
-  y_max <- spaghetti_df %>%
-    dplyr::group_by(metric) %>%
-    dplyr::summarise(y = max(value, na.rm = TRUE) * 1.05, .groups = "drop")
-
-  ann <- dplyr::left_join(ann, y_max, by = "metric") %>%
-    dplyr::mutate(x = 1.5)
-
-  p_paired <- ggplot(spaghetti_df, aes(x = group, y = value, group = sample)) +
-    geom_line(alpha = 0.55, linewidth = 1, color = "grey40") +
-    geom_point(aes(color = group), size = 3.5) +
-    scale_color_manual(values = c("Other clusters" = "grey50", "Cluster 4" = "firebrick")) +
+    )
+  
+  # Y position for annotations
+  y_max <- bar_df %>%
+    group_by(metric) %>%
+    summarise(y = max(value + sd) * 1.15, .groups = "drop")
+  
+  ann <- left_join(ann, y_max, by = "metric")
+  
+  p_bar <- ggplot(bar_df, aes(x = group, y = value, fill = group)) +
+    geom_col(color = "black", linewidth = 0.5, width = 0.7) +
+    geom_errorbar(aes(ymin = value - sd, ymax = value + sd), width = 0.2, linewidth = 0.7) +
     facet_wrap(~ metric, scales = "free_y", nrow = 1) +
+    scale_fill_manual(values = c("Other clusters" = "grey70", "Cluster 4" = "firebrick")) +
     geom_text(
       data = ann,
-      aes(x = x, y = y, label = label),
+      aes(x = 1.5, y = y, label = label),
       inherit.aes = FALSE,
       size = 6,
       fontface = "bold",
       hjust = 0.5,
       vjust = 1
     ) +
-    labs(x = NULL, y = "Per-sample median", color = NULL) +
-    theme_pub() +
+    labs(x = NULL, y = "Mean of per-sample medians (± SD)") +
+    theme_classic(base_size = 24) +
     theme(
-      legend.position = "none",
-      strip.text = element_text(face = "bold", size = 30)
+      axis.title.y = element_text(face = "bold", size = 22),
+      axis.text.x = element_text(angle = 45, hjust = 1, face = "bold", size = 24),
+      axis.text.y = element_text(size = 25),
+      strip.text = element_text(face = "bold", size = 26),
+      strip.background = element_rect(fill = "grey95", color = "black", linewidth = 0.6),
+      legend.position = "none"
     )
-
+  
   ggsave(
     file.path(plot_dir, "qc_cluster4_vs_others_by_sample.png"),
-    p_paired,
-    width = 22, height = 7, dpi = 600,
+    p_bar,
+    width = 16, height = 8, dpi = 600,
     bg = "white"
   )
-
+  
   cat("✓ Saved qc_cluster4_vs_others_by_sample.png\n")
-
+  
 } else {
-  cat("Not enough samples for paired spaghetti plot.\n")
+  cat("Not enough samples for bar plot.\n")
 }
-
 cat("\n")
 cat(paste(rep("=", 80), collapse = ""), "\n")
 cat("  CLUSTER 4 QC INVESTIGATION COMPLETE\n")
