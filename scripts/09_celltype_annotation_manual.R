@@ -236,10 +236,10 @@ pal_early <- c("white", "#F46D43")
 pal_late  <- c("white", "#31A354")
 
 # --- legend title ---
-expr_legend_title <- "Average \nrelative expression \nwith respect to other clusters"
+expr_legend_title <- "Average \nrelative expression \n(to other clusters)"
 
 # --- colorbar sizing ---
-cb_h <- unit(62, "mm")
+cb_h <- unit(52, "mm")
 cb_w <- unit(14, "mm")
 
 # --- add tick marks on the bars ---
@@ -324,11 +324,11 @@ scale_size_continuous(
   range  = c(0.5, 14),
   limits = c(0, 100),
   breaks = c(10, 30, 50, 70, 90),
-  name   = "Percent expressed",
+  name   = "Percent of cells\nexpressing the marker\n(per cluster)",
   guide  = guide_legend(
     order = 4,
     override.aes = list(size = 8),
-    keyheight = unit(10, "mm"),
+    keyheight = unit(5, "mm"),
     keywidth  = unit(10, "mm")
   )
 ) +
@@ -356,8 +356,8 @@ geom_vline(
     axis.text.x = element_text(face = "bold.italic", size = 22, angle = 45, hjust = 1),
     axis.text.y = element_text(face = "bold", size = 23),
     axis.ticks  = element_line(linewidth = 0.6),
-    legend.title = element_text(face = "bold", size = 24, margin = margin(b = 20, unit = "pt")),
-    legend.text  = element_text(face = "bold", size = 25),
+    legend.title = element_text(face = "bold", size = 23, margin = margin(b = 20, unit = "pt")),
+    legend.text  = element_text(face = "bold", size = 23),
     legend.box   = "vertical",
     legend.spacing.y = unit(14, "mm"),
     legend.box.spacing = unit(6, "mm"),
