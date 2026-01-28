@@ -27,12 +27,11 @@
 #   - This script expects metadata columns:
 #       * gsm_id     (used to create sample_label)
 #       * sample_id  (used as Harmony batch variable)
-#   - ncomp is derived (in this script) from the number of PCA dimensions
-#     available, with a sensible default cap.
+#   - ncomp is derived (in script 05_preprocess_pca_horns_parallel.R) via Horn's parallel analysis.
 # =============================================================================
 
 # =========================
-# Libraries (required)
+# Libraries 
 # =========================
 suppressPackageStartupMessages({
   library(Seurat)
