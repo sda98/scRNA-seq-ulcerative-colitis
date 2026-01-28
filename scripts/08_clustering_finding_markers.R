@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # =============================================================================
-# 08_clustering_markers.R
+# 08_clustering_finding_markers.R
 #
 # Purpose:
 #   1) Identify cluster marker genes using FindAllMarkers (Wilcoxon)
