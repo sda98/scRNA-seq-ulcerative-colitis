@@ -13,10 +13,10 @@
 #   results/02_clustering_analysis/objects/seurat_integrated_annotated.rds
 #
 # Outputs:
-#   results/03_annotation_validation/sessionInfo.txt
-#   results/03_annotation_validation/tables/singler_label_counts.csv
-#   results/03_annotation_validation/tables/final_vs_singler_crosstab.csv
-#   results/03_annotation_validation/objects/seurat_integrated_annotated_singler.rds
+#   results/02_clustering_analysis/sessionInfo.txt
+#   results/02_clustering_analysis/tables/singler_label_counts.csv
+#   results/02_clustering_analysis/tables/final_vs_singler_crosstab.csv
+#   results/02_clustering_analysis/objects/seurat_integrated_annotated_singler.rds
 #
 # Notes:
 #   - Uses RNA assay (log-normalized "data" layer) as input to SingleR.
