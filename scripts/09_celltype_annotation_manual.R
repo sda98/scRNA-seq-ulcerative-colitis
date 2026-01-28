@@ -92,8 +92,8 @@ final_annotations <- c(
   "3"  = "B cells (naive/memory)",
   "4"  = "Low-quality (excluded)",
   "5"  = "Plasma cells (IgG+)",
-  "6"  = "Colonocytes (less differentiated)",
-  "7"  = "Colonocytes (more differentiated)",
+  "6"  = "Colonocytes (less mature)",
+  "7"  = "Colonocytes (more mature)",
   "8"  = "Inflammatory fibroblasts",
   "9"  = "Macrophages",
   "10" = "Cycling B cells",
@@ -144,17 +144,28 @@ seurat_integrated$cluster_ordered <- factor(
 Idents(seurat_integrated) <- "cluster_ordered"
 
 # ---- marker sets ----
-genes_epithelial <- c("EPCAM", "LGALS4", "CLDN4", "AGR2")
+# Pan-epithelial markers (keep as-is)
+genes_epithelial <- c("EPCAM", "LGALS4", "CLDN4", "AGR2", "CA1", "CA2")
 
+# Early/immature colonocytes - REVISED
 genes_early <- c(
-  "ADH1C", "MGST1", "CA1", "GPX2", "CA2",
-  "CD24", "FABP1", "AGR3", "MT1G"
+  "SLC12A2",
+  "EPHB2",
+  "EPHB3",
+  "OLFM4",    
+  "MKI67",  
+  "TOP2A",   
+  "PCNA"     
 )
 
+# Late/mature colonocytes (mostly keep, minor tweaks)
 genes_late <- c(
-  "GUCA2A", "GUCA2B", "SLC26A3", "CA4",
-  "CEACAM5", "CEACAM7", "KRT20", "CDHR5",
-  "PHGR1", "MUC4", "MUC12"
+  "GUCA2A", "GUCA2B",    # Surface/crypt-top specific 
+  "SLC26A3",             # Surface colonocyte 
+  "CA4",                 # Mature BEST4+ colonocyte 
+  "CEACAM7",             # Mature colonocyte 
+  "KRT20",               # Differentiation marker 
+  "BEST4"               # Specialized mature colonocytes
 )
 
 features_use <- c(genes_epithelial, genes_early, genes_late)
@@ -173,8 +184,8 @@ df_dot <- p_dot_raw$data %>%
     gene = as.character(features.plot),
     group = dplyr::case_when(
       gene %in% genes_epithelial ~ "Epithelial\ncells",
-      gene %in% genes_early      ~ "Colonocytes\n(early differentiation)",
-      gene %in% genes_late       ~ "Colonocytes\n(late differentiation)",
+      gene %in% genes_early      ~ "Colonocytes\n(less differentiated)",
+      gene %in% genes_late       ~ "Colonocytes\n(more differentiated)",
       TRUE ~ "Other"
     ),
     gene = factor(gene, levels = features_use),
@@ -191,15 +202,15 @@ gene_pos <- tibble::tibble(
     gene_chr = as.character(gene),
     group = dplyr::case_when(
       gene_chr %in% genes_epithelial ~ "Epithelial\ncells",
-      gene_chr %in% genes_early      ~ "Colonocytes\n(early differentiation)",
-      gene_chr %in% genes_late       ~ "Colonocytes\n(late differentiation)",
+      gene_chr %in% genes_early      ~ "Colonocytes\n(less differentiated)",
+      gene_chr %in% genes_late       ~ "Colonocytes\n(more differentiated)",
       TRUE ~ "Other"
     )
   ) %>%
   dplyr::filter(group != "Other")
 
 sep_1 <- max(gene_pos$x_pos[gene_pos$group == "Epithelial\ncells"]) + 0.5
-sep_2 <- max(gene_pos$x_pos[gene_pos$group == "Colonocytes\n(early differentiation)"]) + 0.5
+sep_2 <- max(gene_pos$x_pos[gene_pos$group == "Colonocytes\n(less differentiated)"]) + 0.5
 
 group_centers <- gene_pos %>%
   dplyr::group_by(group) %>%
@@ -213,8 +224,8 @@ label_df <- group_centers %>%
     y = y_top,
     fill_col = dplyr::case_when(
       group == "Epithelial\ncells" ~ "#D6ECFF",
-      group == "Colonocytes\n(early differentiation)" ~ "#FDE0D2",
-      group == "Colonocytes\n(late differentiation)"  ~ "#D9F2E3",
+      group == "Colonocytes\n(less differentiated)" ~ "#FDE0D2",
+      group == "Colonocytes\n(more differentiated)"  ~ "#D9F2E3",
       TRUE ~ "grey95"
     )
   )
@@ -239,7 +250,7 @@ cb_frame_lw  <- 0.6
 
 p_dot_final <- ggplot() +
   
-# ---- Late markers layer + colorbar 1 ----
+  # ---- Epithelial markers layer + colorbar 1 ----
 geom_point(
   data = df_dot[df_dot$group == "Epithelial\ncells", ],
   aes(x = gene, y = id, size = pct.exp, color = avg.exp.scaled)
@@ -263,9 +274,9 @@ geom_point(
   
   ggnewscale::new_scale_color() +
   
-# ---- Late markers layer + colorbar 2 ----
+  # ---- LESS differentiated (early) markers layer + colorbar 2 ----
 geom_point(
-  data = df_dot[df_dot$group == "Colonocytes\n(early differentiation)", ],
+  data = df_dot[df_dot$group == "Colonocytes\n(less differentiated)", ],
   aes(x = gene, y = id, size = pct.exp, color = avg.exp.scaled)
 ) +
   scale_color_gradient(
@@ -287,9 +298,9 @@ geom_point(
   
   ggnewscale::new_scale_color() +
   
-# ---- Late markers layer + colorbar 3 ----
+  # ---- MORE differentiated (late) markers layer + colorbar 3 ----
 geom_point(
-  data = df_dot[df_dot$group == "Colonocytes\n(late differentiation)", ],
+  data = df_dot[df_dot$group == "Colonocytes\n(more differentiated)", ],
   aes(x = gene, y = id, size = pct.exp, color = avg.exp.scaled)
 ) +
   scale_color_gradient(
@@ -308,38 +319,36 @@ geom_point(
       frame.linewidth = cb_frame_lw
     )
   ) +
-  
   # ---- shared size legend ----
 scale_size_continuous(
   range  = c(0.5, 14),
   limits = c(0, 100),
-  breaks = size_breaks,
+  breaks = c(10, 30, 50, 70, 90),
   name   = "Percent expressed",
   guide  = guide_legend(
     order = 4,
-    override.aes = list(size = size_leg_sizes),
+    override.aes = list(size = 8),
     keyheight = unit(10, "mm"),
     keywidth  = unit(10, "mm")
   )
 ) +
-  
   # ---- separators ----
 geom_vline(
   xintercept = c(sep_1, sep_2),
   linetype = "solid", linewidth = 2.5, color = "black"
 ) +
-geom_label(
-  data = label_df,
-  aes(x = x, y = y, label = group, fill = I(fill_col)),
-  inherit.aes = FALSE,
-  fontface = "bold",
-  size = 10,
-  color = "black",
-  label.size = 0.8,
-  label.r = unit(0.15, "lines"),
-  label.padding = unit(0.35, "lines"),
-  show.legend = FALSE
-) +
+  geom_label(
+    data = label_df,
+    aes(x = x, y = y, label = group, fill = I(fill_col)),
+    inherit.aes = FALSE,
+    fontface = "bold",
+    size = 10,
+    color = "black",
+    label.size = 0.8,
+    label.r = unit(0.15, "lines"),
+    label.padding = unit(0.35, "lines"),
+    show.legend = FALSE
+  ) +
   labs(x = NULL, y = NULL) +
   coord_cartesian(clip = "off") +
   theme_classic(base_size = 28) +
@@ -356,6 +365,7 @@ geom_label(
     plot.margin  = margin(t = 100, r = 20, b = 10, l = 20, unit = "pt")
   )
 
+
 ggsave(
   file.path(plot_dir, "dotplot_colonocyte_differentiation_markers.png"),
   p_dot_final, width = 22, height = 15, dpi = 600
@@ -371,4 +381,3 @@ saveRDS(seurat_integrated, out_obj)
 
 cat("\n✓ Saved annotated object: ", out_obj, "\n")
 cat("\n✓✓✓ MANUAL ANNOTATION COMPLETE ✓✓✓\n\n")
-
