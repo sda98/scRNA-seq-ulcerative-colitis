@@ -4,19 +4,19 @@
 # 05_preprocess_pca_horns_parallel.R
 #
 # Purpose:
-#   8) Scale data (ScaleData) using previously selected HVGs
-#   9) Run PCA (RunPCA) using HVGs
-#  10) Estimate an "optimal" number of PCs using Horn’s Parallel Analysis
+#   1) Scale data (ScaleData) using previously selected HVGs
+#   2) Run PCA (RunPCA) using HVGs
+#   3) Estimate an "optimal" number of PCs using Horn’s Parallel Analysis
 #      (sampling up to 2000 cells and 500 HVGs for computational efficiency)
-#  11) Save a styled elbow plot with a vertical line at the Horn-derived PC count
-#  12) Save the PCA-processed Seurat object for downstream clustering/integration
+#   4) Save a styled elbow plot with a vertical line at the Horn-derived PC count
+#   5) Save the PCA-processed Seurat object for downstream clustering/integration
 #
 # Inputs:
 #   results/01_quality_control/objects/seurat_norm_hvg.rds
 #
 # Outputs:
-#   results/01_quality_control/plots/qc_PCA_elbow.png
-#   results/01_quality_control/objects/seurat_pca.rds
+#   results/02_clustering_analysis/plots/qc_PCA_elbow.png
+#   results/02_clustering_analysis/objects/seurat_pca.rds
 #
 # Notes:
 #   - Horn’s parallel analysis is computed on a sampled subset of cells/genes to
@@ -44,7 +44,11 @@ if (!file.exists(in_obj)) {
        "\nRun 04_normalization_finding_most_variable_features.R first.")
 }
 
-out_dir    <- file.path(root_dir, "results", "01_quality_control")
+# Input comes from QC stage
+in_stage  <- file.path(root_dir, "results", "01_quality_control")
+
+# Output goes to clustering stage
+out_dir    <- file.path(root_dir, "results", "02_clustering_analysis")
 plot_dir   <- file.path(out_dir, "plots")
 table_dir  <- file.path(out_dir, "tables")
 object_dir <- file.path(out_dir, "objects")
@@ -68,7 +72,7 @@ if (length(VariableFeatures(seurat_obj_filtered)) == 0) {
 DefaultAssay(seurat_obj_filtered) <- "RNA"
 
 # =============================================================================
-# 8) SCALING + PCA
+# 1) SCALING + PCA
 # =============================================================================
 cat("\n=== SCALING AND PCA ===\n")
 
@@ -87,7 +91,7 @@ seurat_obj_filtered <- RunPCA(
 cat("✓ PCA computed\n")
 
 # =============================================================================
-# 9) Horn's Parallel Analysis to determine optimal PCs
+# 2) Horn's Parallel Analysis to determine optimal PCs
 # =============================================================================
 cat("\nRunning Horn's Parallel Analysis...\n")
 
@@ -132,7 +136,7 @@ ncomp <- sum(obs > thr)
 cat("✓ Optimal number of PCs:", ncomp, "\n\n")
 
 # =============================================================================
-# 10) Styled Elbow Plot with Horn ncomp line
+# 3) Styled Elbow Plot with Horn ncomp line
 # =============================================================================
 cat("Creating styled elbow plot...\n")
 
@@ -179,10 +183,13 @@ cat("✓ Elbow plot saved\n")
 cat("\nRecommended PCs for downstream analysis:", ncomp, "\n")
 
 # =============================================================================
-# 12) SAVE OBJECT FOR DOWNSTREAM SCRIPTS
+# 4) SAVE OBJECT FOR DOWNSTREAM SCRIPTS
 # =============================================================================
 out_obj <- file.path(object_dir, "seurat_pca.rds")
 saveRDS(seurat_obj_filtered, out_obj)
+
+cat("\n✓ Saved PCA object: ", out_obj, "\n")
+cat("\n✓✓✓ PCA + HORN PARALLEL COMPLETE ✓✓✓\n\n")
 
 cat("\n✓ Saved PCA object: ", out_obj, "\n")
 cat("\n✓✓✓ PCA + HORN PARALLEL COMPLETE ✓✓✓\n\n")
