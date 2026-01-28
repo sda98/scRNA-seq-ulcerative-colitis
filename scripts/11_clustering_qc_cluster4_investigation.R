@@ -4,22 +4,29 @@
 # 11_clustering_qc_cluster4_investigation.R
 #
 # Purpose:
-#   Investigate whether Cluster 4 (res=0.4) represents low-quality cells
+#   Investigate whether Cluster 4 (RNA_snn_res.0.4) represents low-quality cells
 #   that should be removed before downstream analysis.
 #
-# Visualizations:
-#   - Bar plot: Cluster 4 top-20 markers by functional category
-#   - Pie chart: Cluster 4 distribution across samples
-#   - Bar plot: QC metrics comparison (Cluster 4 vs Others) with p-values
+# Overview (what this script does):
+#   1) Load clustered Seurat object (Harmony-integrated; res = 0.4).
+#   2) Summarize QC metrics per cluster to flag suspicious clusters.
+#   3) Read precomputed top-20 marker table and subset Cluster 4 markers.
+#      - Categorize Cluster 4 markers by functional type and export table.
+#      - Plot Cluster 4 top markers by type.
+#   4) Assess Cluster 4 distribution across samples (composition) and plot a pie chart.
+#   5) Compare Cluster 4 vs all other cells using per-sample paired medians
+#      (sample-based paired Wilcoxin test; avoids cell-level p-values / pseudoreplication).
+#      - Export per-sample table and paired Wilcoxon test results.
+#      - Plot bar comparison (mean of per-sample medians ± SD) with p-values.
 #
 # Inputs:
 #   results/02_clustering_analysis/objects/seurat_integrated_clustered.rds
 #   results/02_clustering_analysis/tables/top20_markers_per_cluster_res0.4.csv
 #
 # Outputs (tables):
+#   results/02_clustering_analysis/sessionInfo_11.txt
 #   results/02_clustering_analysis/tables/qc_by_cluster_res0.4.csv
 #   results/02_clustering_analysis/tables/cluster4_top20_markers_by_type.csv
-#   results/02_clustering_analysis/tables/cluster4_sample_composition.csv
 #   results/02_clustering_analysis/tables/cluster4_vs_others_by_sample.csv
 #   results/02_clustering_analysis/tables/cluster4_vs_others_paired_tests.csv
 #
@@ -27,9 +34,6 @@
 #   results/02_clustering_analysis/plots/cluster4_top20_markers_by_type.png
 #   results/02_clustering_analysis/plots/cluster4_composition_pie.png
 #   results/02_clustering_analysis/plots/qc_cluster4_vs_others_by_sample.png
-#
-# =============================================================================
-#
 # =============================================================================
 
 # =========================
@@ -151,7 +155,7 @@ cat("  Median %MT     :", round(c4$median_pct_mt, 3),
     sprintf("(%+.3f vs global median %.3f)", c4$mt_diff, global_mt), "\n\n")
 
 # =============================================================================
-# 1A) CLUSTER 4 TOP MARKERS BAR PLOT
+# 3) CLUSTER 4 TOP MARKERS BAR PLOT - ROBUST ANNOTATION
 # =============================================================================
 cat("=== 1A) Cluster 4 top markers grouped by type ===\n")
 
@@ -168,29 +172,62 @@ top_c4 <- markers_tbl %>%
   slice_head(n = 20) %>%
   mutate(
     type = case_when(
-      gene %in% c("LTB", "CORO1A", "RAC2", "KLRB1", "CD52", "ARHGDIB") ~ "Immune / lymphocyte",
-      gene %in% c("ACTB", "PFN1", "ARPC3", "COTL1", "TMSB4X")         ~ "Cytoskeleton / actin",
-      grepl("^EIF", gene) | gene %in% c("SNRPD2")                     ~ "Translation / RNA processing",
-      gene %in% c("LDHB")                                             ~ "Metabolism",
-      TRUE                                                            ~ "Other / unclear"
+      # ---- Immune ----
+      gene %in% c(
+        "LTB", "CORO1A", "RAC2", "KLRB1", "CD52", "ARHGDIB",
+        "CD3D", "CD3E", "CD3G", "CD2", "CD7",
+        "IL7R", "IL32", "PTPRC",
+        "TRAC", "TRBC1", "TRBC2"
+      ) ~ "Immune",
+      
+      # ---- Ubiquitous: Cytoskeleton ----
+      gene %in% c(
+        "ACTB", "ACTG1", "PFN1", "ARPC3", "COTL1",
+        "TMSB4X", "TMSB10", "CFL1", "MYL6"
+      ) ~ "Cytoskeleton (ubiquitous)",
+      
+      # ---- Ubiquitous: Translation/Ribosomal ----
+      grepl("^EIF", gene) |
+        grepl("^RPL", gene) |
+        grepl("^RPS", gene) |
+        gene %in% c(
+          "SNRPD2", "SNRPG", "SNRPE",
+          "EEF1A1", "EEF2", "PABPC1"
+        ) ~ "Translation (ubiquitous)",
+      
+      # ---- Ubiquitous: Metabolism ----
+      gene %in% c(
+        "LDHB", "LDHA", "GAPDH", "PKM",
+        "ENO1", "PGAM1", "ATP5F1E", "ATP5MC3"
+      ) ~ "Metabolism (ubiquitous)",
+      
+      # ---- Catch-all ----
+      TRUE ~ "Other / unclear"
     ),
     type = factor(type, levels = c(
-      "Immune / lymphocyte",
-      "Cytoskeleton / actin",
-      "Translation / RNA processing",
-      "Metabolism",
+      "Immune",
+      "Cytoskeleton (ubiquitous)",
+      "Translation (ubiquitous)",
+      "Metabolism (ubiquitous)",
       "Other / unclear"
     ))
   )
 
 write.csv(top_c4, file.path(table_dir, "cluster4_top20_markers_by_type.csv"), row.names = FALSE)
 
+# ---- Summary stats ----
+cat("\nCluster 4 marker composition:\n")
+type_summary <- top_c4 %>% 
+  count(type) %>% 
+  mutate(pct = round(100 * n / sum(n), 1))
+print(type_summary)
+
 # Colors
 type_cols <- c(
-  "Immune / lymphocyte"          = "#F8766D",
-  "Cytoskeleton / actin"         = "#A3A500",
-  "Translation / RNA processing" = "#00BF7D",
-  "Metabolism"                   = "#00B0F6",
+  "Immune"                       = "#F8766D",
+  "Cytoskeleton (ubiquitous)"    = "#A3A500",
+  "Translation (ubiquitous)"     = "#00BF7D",
+  "Metabolism (ubiquitous)"      = "#00B0F6",
   "Other / unclear"              = "#E76BF3"
 )
 
@@ -214,10 +251,10 @@ p_markers <- ggplot(top_c4, aes(x = gene, y = avg_log2FC, fill = type)) +
   theme_classic(base_size = 18) +
   theme(
     plot.title = element_text(size = 60, face = "bold", margin = margin(b = 40, unit = "pt")),
-    axis.text.x = element_text(size = 50, color = "black"),
+    axis.text.x = element_text(size = 52, color = "black"),
     axis.text.y = element_text(size = 28, face = "bold.italic", color = "black"),
-    axis.title.x = element_text(size = 33, face = "bold"),
-    strip.text = element_text(size = 34, face = "bold"),
+    axis.title.x = element_text(size = 40, face = "bold", margin = margin(t = 30, unit = "pt")),
+    strip.text = element_text(size = 33, face = "bold"),
     strip.background = element_rect(fill = "grey95", color = "black", linewidth = 0.6),
     legend.position = "none"
   ) +
@@ -227,41 +264,11 @@ p_markers <- ggplot(top_c4, aes(x = gene, y = avg_log2FC, fill = type)) +
 ggsave(
   file.path(plot_dir, "cluster4_top20_markers_by_type.png"),
   p_markers,
-  width = 13, height = 18, dpi = 600,
+  width = 13, height = 20, dpi = 600,
   bg = "white"
 )
+
 cat("✓ Saved cluster4_top_markers_by_type.png\n")
-
-# =============================================================================
-# 3) SAMPLE COMPOSITION (Cluster 4)
-# =============================================================================
-cat("=== 2) Cluster 4 Sample Composition ===\n")
-
-composition <- seurat_integrated@meta.data %>%
-  dplyr::mutate(
-    cluster = as.character(RNA_snn_res.0.4),
-    sample  = .data[[sample_col]]
-  ) %>%
-  dplyr::group_by(sample, cluster) %>%
-  dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
-  dplyr::group_by(sample) %>%
-  dplyr::mutate(pct_of_sample = 100 * n / sum(n)) %>%
-  dplyr::ungroup()
-
-c4_comp <- composition %>%
-  dplyr::filter(cluster == "4") %>%
-  dplyr::arrange(desc(n))
-
-write.csv(c4_comp, file.path(table_dir, "cluster4_sample_composition.csv"), row.names = FALSE)
-cat("✓ Saved cluster4_sample_composition.csv\n")
-
-cat("Cluster 4 cells by sample:\n")
-print(c4_comp, n = 50)
-
-c4_total <- sum(c4_comp$n)
-top_sample_contribution <- 100 * max(c4_comp$n) / c4_total
-cat("\nCluster 4 is present in", nrow(c4_comp), "samples.\n")
-cat("Top sample contributes", round(top_sample_contribution, 1), "% of Cluster 4 cells.\n")
 
 # =============================================================================
 # 4) PIE CHART: Cluster 4 composition by sample
@@ -442,7 +449,7 @@ if (nrow(by_sample) >= 4) {
     )
   )
   
-  # Annotation with p-values
+  # Annotation with paired sample-based Wilcoxin p-values
   ann <- paired_test_results %>%
     mutate(
       metric = factor(metric, 
@@ -462,6 +469,7 @@ if (nrow(by_sample) >= 4) {
   ann <- left_join(ann, y_max, by = "metric")
   
   p_bar <- ggplot(bar_df, aes(x = group, y = value, fill = group)) +
+    geom_hline(yintercept = 0, color = "black", linewidth = 1) +
     geom_col(color = "black", linewidth = 0.5, width = 0.7) +
     geom_errorbar(aes(ymin = value - sd, ymax = value + sd), width = 0.2, linewidth = 0.7) +
     facet_wrap(~ metric, scales = "free_y", nrow = 1) +
@@ -473,7 +481,7 @@ if (nrow(by_sample) >= 4) {
       size = 6,
       fontface = "bold",
       hjust = 0.5,
-      vjust = 1
+      vjust = 0.8
     ) +
     labs(x = NULL, y = "Mean of per-sample medians (± SD)") +
     theme_classic(base_size = 24) +
@@ -493,7 +501,7 @@ if (nrow(by_sample) >= 4) {
     bg = "white"
   )
   
-  cat("✓ Saved qc_cluster4_vs_others_by_sample.png\n")
+cat("✓ Saved qc_cluster4_vs_others_by_sample.png\n")
   
 } else {
   cat("Not enough samples for bar plot.\n")
