@@ -370,7 +370,7 @@ Before running any scripts, you **must** download and extract the raw data from 
 ### 1. Download and Prepare Data
 See **Data Download & Preparation** section above.
 
-### 2.Downoload or Copy this Repository and Run Pipeline Sequentially
+### 2. Downoload or Copy this Repository and Run Pipeline Sequentially
 ```r
 # Set working directory to project root
 setwd("/path/to/UC_scRNAseq_analysis")
