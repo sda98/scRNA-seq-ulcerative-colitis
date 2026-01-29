@@ -425,4 +425,4 @@ Bioinformatics Researcher
 
 ## License
 
-This analysis code is provided for research and educational purposes. Please cite the original publication when using this dataset or analysis approach.
+This analysis code is provided for research and educational purposes. Please cite both the original publication and this repository when using this dataset or analysis approach.
