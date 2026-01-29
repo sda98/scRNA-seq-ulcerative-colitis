@@ -466,7 +466,7 @@ p_spaghetti <- ggplot(spaghetti_df, aes(x = x_pos, y = cytotrace_median, group =
   labs(
     title    = "CytoTRACE2 scores: per-sample comparison",
     subtitle = paste0(n_consistent, " of ", nrow(sample_pairs), 
-                      " samples show Cluster 6 > Cluster 7 (Wilcoxin ", p_label, ")"),
+                      " samples show Cluster 6 > Cluster 7 (Wilcoxon ", p_label, ")"),
     x        = NULL,
     y        = "CytoTRACE2 Score\n(per sample median)"
   ) +
