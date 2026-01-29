@@ -419,7 +419,7 @@ Du J, Zhang J, Wang L, Wang X, et al. (2023). Selective oxidative protection lea
 ## Author
 
 **Sergey Dadoyan, M.Sc.**  
-Bioinformatics Researcher  
+Bioinformatician 
 [LinkedIn](https://linkedin.com/in/sergeydadoyan) | [GitHub](https://github.com/sergeydadoyan)
 
 ---
