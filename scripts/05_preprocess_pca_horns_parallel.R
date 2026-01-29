@@ -91,7 +91,7 @@ seurat_obj_filtered <- RunPCA(
 cat("✓ PCA computed\n")
 
 # =============================================================================
-# 2) Horn's Parallel Analysis to determine optimal PCs
+# 2) HORN'S PARALLEL ANALYSIS TO DETERMINE OPTIMAL PCs TO DETERMINE OPTIMAL PCs
 # =============================================================================
 cat("\nRunning Horn's Parallel Analysis...\n")
 
@@ -136,7 +136,7 @@ ncomp <- sum(obs > thr)
 cat("✓ Optimal number of PCs:", ncomp, "\n\n")
 
 # =============================================================================
-# 3) Styled Elbow Plot with Horn ncomp line
+# 3) ELBOW PLOT WITH HORN-COMPUTED NCOMP LABEL
 # =============================================================================
 cat("Creating styled elbow plot...\n")
 
