@@ -96,7 +96,7 @@ install.packages(c("ggrepel", "ggh4x", "ggforce", "viridis", "scales"))
 install.packages("reticulate")
 ```
 
-### Python Environment (Optional - for scCODA)
+### Python Environment (for scCODA)
 ```bash
 # Create conda environment
 conda create -n sccoda python=3.9
