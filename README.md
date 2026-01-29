@@ -57,7 +57,7 @@ This repository contains a comprehensive end-to-end single-cell RNA-seq analysis
 │   ├── 15_prepare_sccoda_inputs.R
 │   ├── 16_run_sccoda_reticulate.R
 │   ├── 17_pseudobulk_less_mature_colonocytes_prepare.R
-│   └── 18_pseudobulk_less_mature_colonocytes.R
+│   └── 18_pseudobulk_deseq2_less_mature_colonocytes.R
 └── results/
     ├── 01_quality_control/
     ├── 02_clustering_analysis/
@@ -393,7 +393,7 @@ source("scripts/14_composition_tables_and_plots.R")
 source("scripts/15_prepare_sccoda_inputs.R")
 source("scripts/16_run_sccoda_reticulate.R")
 source("scripts/17_pseudobulk_less_mature_colonocytes_prepare.R")
-source("scripts/18_pseudobulk_less_mature_colonocytes.R")
+source("scripts/18_pseudobulk_deseq2_less_mature_colonocytes.R")
 ```
 
 ---
