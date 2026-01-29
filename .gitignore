@@ -1,0 +1,31 @@
+# Raw data (too large for git)
+data/
+
+# Results (generated files)
+results/
+
+# R objects (large files)
+*.rds
+*.RData
+
+# R session files
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# Python (for scCODA)
+__pycache__/
+*.pyc
+venv/
+.ipynb_checkpoints/
+
+# System files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# Keep important files
+!README.md
+!.gitignore
