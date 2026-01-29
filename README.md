@@ -92,7 +92,7 @@ BiocManager::install(c("DESeq2", "ashr", "org.Hs.eg.db"))
 # Visualization & utilities
 install.packages(c("ggrepel", "ggh4x", "ggforce", "viridis", "scales"))
 
-# For scCODA integration (optional)
+# For scCODA integration
 install.packages("reticulate")
 ```
 
