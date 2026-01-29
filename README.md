@@ -152,9 +152,9 @@ Before running any scripts, you **must** download and extract the raw data from 
 ### **Script 01:** Data Loading
 - Recursively finds all 10X MTX files under `data/raw/`
 - Loads matrix, barcodes, and features for each sample
-- Merges samples using safe gene union (aligns gene sets)
+- Merges samples 
 - Creates initial Seurat object with metadata (condition, replicate, sample_id)
-- Computes basic QC metrics (percent.mt, percent.ribo)
+- Computes basic QC metrics (percent.mt (% mitochondrial reads), percent.ribo (% ribosomal reads))
 - **Output:** `seurat_raw.rds`, clinical summary table
 
 ### **Script 02:** Quality Control & Filtering
@@ -219,8 +219,8 @@ Before running any scripts, you **must** download and extract the raw data from 
 - Exports cell type distribution table
 - **Output:** `seurat_integrated_annotated.rds`, cell type counts, differentiation marker DotPlot
 
-### **Script 10:** SingleR Validation
-- Validates manual annotations using SingleR with Human Primary Cell Atlas reference
+### **Script 10:** SingleR Machine Learning Validation
+- Validates manual annotations using SingleR machine learning-based tool with Human Primary Cell Atlas reference
 - Generates cross-tabulation of manual vs. SingleR labels
 - Identifies dominant SingleR label for each manual cell type
 - **Output:** `seurat_integrated_annotated_singler.rds`, validation tables
@@ -281,7 +281,7 @@ Before running any scripts, you **must** download and extract the raw data from 
 - Generates per-cell-type composition boxplots with scCODA significance stars:
   - `*` = inclusion probability ≥ 0.7
   - `**` = inclusion probability ≥ 0.9
-- **Output:** scCODA model summary, per-cell-type plots with statistical annotations
+- **Output:** scCODA model summary, per-cell-type box plots with statistical annotations 
 
 ### **Script 17:** Pseudobulk DESeq2 Preparation
 - Subsets target cell type (default: "Colonocytes (less mature)")
