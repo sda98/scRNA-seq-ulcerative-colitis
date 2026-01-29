@@ -56,7 +56,7 @@ dir.create(table_dir, recursive = TRUE, showWarnings = FALSE)
 writeLines(capture.output(sessionInfo()), file.path(out_dir, "sessionInfo.txt"))
 
 # =========================
-# Load object
+# 1) LOAD SEURAT OBJECT
 # =========================
 cat("\nLoading cleaned Seurat object...\n")
 seurat_clean <- readRDS(in_obj)
@@ -86,7 +86,7 @@ cat("Sample column:", sample_col, "\n")
 cat("Condition column:", condition_col, "\n")
 
 # ============================================
-# Prepare data for scCODA
+# 2) PREPARE SAMPLES x Cell TYPES MATRIX FOR SCCODA
 # ============================================
 cat("\n=== Preparing data for scCODA ===\n")
 
@@ -122,9 +122,12 @@ sample_info$condition_code <- dplyr::case_when(
   TRUE ~ as.character(sample_info$condition)
 )
 
+# ============================================
+# 3) EXPORT scCODA INPUTS
+# ============================================
+
 write.csv(counts_only, file.path(table_dir, "sccoda_counts.csv"), row.names = FALSE)
 write.csv(sample_info, file.path(table_dir, "sccoda_metadata.csv"), row.names = FALSE)
 
 cat("✓ scCODA input files saved:\n")
 cat("  -", file.path(table_dir, "sccoda_counts.csv"), "\n")
-cat("  -", file.path(table_dir, "sccoda_metadata.csv"), "\n")
