@@ -218,8 +218,8 @@ write.csv(top_c4, file.path(table_dir, "cluster4_top20_markers_by_type.csv"), ro
 # ---- Summary stats ----
 cat("\nCluster 4 marker composition:\n")
 type_summary <- top_c4 %>% 
-  count(type) %>% 
-  mutate(pct = round(100 * n / sum(n), 1))
+  dplyr::count(type) %>% 
+  dplyr::mutate(pct = round(100 * n / sum(n), 1))
 print(type_summary)
 
 # Colors
