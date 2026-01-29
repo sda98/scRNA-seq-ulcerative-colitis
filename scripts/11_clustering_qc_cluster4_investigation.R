@@ -237,7 +237,7 @@ top_c4 <- top_c4 %>%
   mutate(gene = factor(gene, levels = gene))
 
 # Panel heights proportional to gene count
-panel_heights <- top_c4 %>% count(type) %>% pull(n)
+panel_heights <- top_c4 %>% dplyr::count(type) %>% dplyr::pull(n)
 
 # Plot
 p_markers <- ggplot(top_c4, aes(x = gene, y = avg_log2FC, fill = type)) +
@@ -282,11 +282,11 @@ c4_comp_plot <- seurat_integrated@meta.data %>%
     cluster = as.character(RNA_snn_res.0.4),
     sample_plot = .data[[sample_plot_col]]
   ) %>%
-  filter(cluster == "4") %>%
-  count(sample_plot, name = "n") %>%
-  mutate(pct_of_c4 = 100 * n / sum(n)) %>%
-  arrange(desc(n)) %>%
-  mutate(
+  dplyr::filter(cluster == "4") %>%
+  dplyr::count(sample_plot, name = "n") %>%
+  dplyr::mutate(pct_of_c4 = 100 * n / sum(n)) %>%
+  dplyr::arrange(desc(n)) %>%
+  dplyr::mutate(
     sample_plot = factor(sample_plot, levels = sample_plot),
     legend_label = paste0(sample_plot, " (", round(pct_of_c4, 1), "%)"),
     legend_label = factor(legend_label, levels = legend_label)
@@ -451,7 +451,7 @@ if (nrow(by_sample) >= 4) {
   
   # Annotation with paired sample-based Wilcoxin p-values
   ann <- paired_test_results %>%
-    mutate(
+    dplyr::mutate(
       metric = factor(metric, 
                       levels = c("nFeature_RNA", "nCount_RNA", "percent.mt"),
                       labels = c("nFeature_RNA", "nCount_RNA", "Mitochondrial reads (%)")),
