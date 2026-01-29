@@ -5,12 +5,13 @@
 #
 # Purpose:
 #   1) Load final cleaned/annotated Seurat object.
-#   2) Compute per-sample cell counts and proportions by celltype_final.
-#   3) Produce descriptive summaries by condition and fold-change tables.
-#   4) Export compositional analysis tables.
+#   2) Conduct descriptive compositional analysis:
+#       - Calculate cell counts per sample
+#       - Calculate proportions
+#       - Provide descriptive summary
 #
 # Inputs:
-#   results/02_clustering_analysis/objects/seurat_clean.rds
+#   results/02_clustering_analysis/objects/seurat_integrated_clean.rds
 #     - Must contain meta.data columns:
 #         - celltype_final
 #         - sample_id (or gsm_id)
@@ -20,8 +21,8 @@
 #   results/03_compositional_analysis/sessionInfo.txt
 #   results/03_compositional_analysis/tables/cell_counts_per_sample.csv
 #   results/03_compositional_analysis/tables/composition_summary_by_condition.csv
-#   results/03_compositional_analysis/tables/composition_fold_changes.csv
 # =============================================================================
+
 
 suppressPackageStartupMessages({
   library(Seurat)
@@ -38,7 +39,7 @@ if (basename(root_dir) == "scripts") root_dir <- dirname(root_dir)
 
 in_obj <- file.path(
   root_dir, "results", "02_clustering_analysis", "objects",
-  "seurat_clean.rds"
+  "seurat_integrated_clean.rds"
 )
 if (!file.exists(in_obj)) {
   stop(
@@ -56,7 +57,7 @@ dir.create(table_dir, recursive = TRUE, showWarnings = FALSE)
 writeLines(capture.output(sessionInfo()), file.path(out_dir, "sessionInfo.txt"))
 
 # =========================
-# Load object
+# 1) LOAD SEURAT OBJECT
 # =========================
 cat("\nLoading cleaned Seurat object...\n")
 seurat_clean <- readRDS(in_obj)
@@ -86,7 +87,7 @@ cat("Sample column:", sample_col, "\n")
 cat("Condition column:", condition_col, "\n")
 
 # ============================================
-# COMPOSITIONAL ANALYSIS
+# 2) COMPOSITIONAL ANALYSIS
 # ============================================
 cat("\n=== COMPOSITIONAL ANALYSIS ===\n")
 
@@ -161,55 +162,6 @@ write.csv(
   composition_summary,
   file.path(table_dir, "composition_summary_by_condition.csv"),
   row.names = FALSE
-)
-
-# ============================================
-# Step 4: Calculate fold changes
-# ============================================
-composition_wide <- composition_summary %>%
-  dplyr::select(condition, celltype_final, mean_percentage) %>%
-  tidyr::pivot_wider(names_from = condition, values_from = mean_percentage)
-
-fold_changes <- composition_wide %>%
-  dplyr::mutate(
-    FC_UCSC_vs_HC    = `UC Self-Control`    / `Healthy Control`,
-    FC_UC_vs_HC      = `Ulcerative Colitis` / `Healthy Control`,
-    FC_UC_vs_UCSC    = `Ulcerative Colitis` / `UC Self-Control`,
-    log2FC_UCSC_vs_HC = log2(FC_UCSC_vs_HC),
-    log2FC_UC_vs_HC   = log2(FC_UC_vs_HC),
-    log2FC_UC_vs_UCSC = log2(FC_UC_vs_UCSC)
-  ) %>%
-  dplyr::arrange(desc(abs(log2FC_UC_vs_HC)))
-
-cat("\n--- Fold Changes (sorted by |log2FC| UC vs HC) ---\n")
-print(
-  fold_changes %>%
-    dplyr::select(celltype_final, `Healthy Control`, `Ulcerative Colitis`, FC_UC_vs_HC, log2FC_UC_vs_HC)
-)
-
-write.csv(
-  fold_changes,
-  file.path(table_dir, "composition_fold_changes.csv"),
-  row.names = FALSE
-)
-
-# ============================================
-# Step 5: Colonocyte-specific summary
-# ============================================
-cat("\n--- Colonocyte Composition ---\n")
-
-colonocyte_summary <- composition_summary %>%
-  dplyr::filter(celltype_final %in% c("Colonocytes*", "Colonocytes"))
-
-print(colonocyte_summary)
-
-colonocyte_fc <- fold_changes %>%
-  dplyr::filter(celltype_final %in% c("Colonocytes*", "Colonocytes"))
-
-cat("\n--- Colonocyte Fold Changes ---\n")
-print(
-  colonocyte_fc %>%
-    dplyr::select(celltype_final, `Healthy Control`, `Ulcerative Colitis`, FC_UC_vs_HC, log2FC_UC_vs_HC)
 )
 
 cat("\n✓✓✓ COMPOSITIONAL ANALYSIS COMPLETE ✓✓✓\n\n")
