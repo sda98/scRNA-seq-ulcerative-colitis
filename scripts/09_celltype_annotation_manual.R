@@ -344,7 +344,7 @@ geom_vline(
     fontface = "bold",
     size = 10,
     color = "black",
-    label.size = 0.8,
+    linewidth = 0.8,
     label.r = unit(0.15, "lines"),
     label.padding = unit(0.35, "lines"),
     show.legend = FALSE
