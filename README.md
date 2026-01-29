@@ -416,6 +416,13 @@ Du J, Zhang J, Wang L, Wang X, et al. (2023). Selective oxidative protection lea
 
 ---
 
+## Requirements
+
+- **R** (tested with **R 4.5.2**)  
+- Tested on **Windows 11** using **RStudio 2026.01.0 Build 392**
+
+---
+
 ## Author
 
 **Sergey Dadoyan, M.Sc.**  
