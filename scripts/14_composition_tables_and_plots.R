@@ -10,7 +10,7 @@
 #   4) Export compositional analysis tables.
 #
 # Inputs:
-#   results/02_clustering_analysis/objects/seurat_clean_final.rds
+#   results/02_clustering_analysis/objects/seurat_clean.rds
 #     - Must contain meta.data columns:
 #         - celltype_final
 #         - sample_id (or gsm_id)
@@ -21,10 +21,6 @@
 #   results/03_compositional_analysis/tables/cell_counts_per_sample.csv
 #   results/03_compositional_analysis/tables/composition_summary_by_condition.csv
 #   results/03_compositional_analysis/tables/composition_fold_changes.csv
-#
-# Notes:
-#   - Assumes seurat_clean already has standardized celltype_final names
-#     (e.g., Colonocytes* and Colonocytes if that’s what you decided upstream).
 # =============================================================================
 
 suppressPackageStartupMessages({
@@ -42,7 +38,7 @@ if (basename(root_dir) == "scripts") root_dir <- dirname(root_dir)
 
 in_obj <- file.path(
   root_dir, "results", "02_clustering_analysis", "objects",
-  "seurat_clean_final.rds"
+  "seurat_clean.rds"
 )
 if (!file.exists(in_obj)) {
   stop(
