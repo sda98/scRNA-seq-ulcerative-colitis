@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# =============================================================================
+# 
 # 18_pseudobulk_less_mature_colonocytes.R
 #
 # Purpose:
