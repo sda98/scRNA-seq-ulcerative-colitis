@@ -2,6 +2,7 @@
 
 **Dataset:** GSE231993 / PRJNA970371  
 **Publication:** Du et al., *Nature Communications* (2023)  (https://doi.org/10.1038/s41467-023-39173-2)
+
 **Title:** "Selective oxidative protection leads to tissue topological changes orchestrated by macrophage during ulcerative colitis"
 
 ## Overview
