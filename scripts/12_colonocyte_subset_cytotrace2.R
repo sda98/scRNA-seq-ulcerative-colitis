@@ -18,9 +18,9 @@
 #        - Spaghetti plot of per-sample medians (paired Cluster 6 vs 7) to show
 #            per-sample direction consistency.
 #   6) Save outputs:
-#        6A) Tables (cell-level summary, per-sample medians, Wilcoxon test results).
-#        6B) Plots (boxplot, spaghetti plot).
-#        6C) Colonocyte subset Seurat object with CytoTRACE2 metadata.
+#         - Tables (cell-level summary, per-sample medians, Wilcoxon test results).
+#         - Plots (boxplot, spaghetti plot).
+#         - Colonocyte subset Seurat object with CytoTRACE2 metadata.
 #
 # Inputs:
 #   results/02_clustering_analysis/objects/seurat_integrated_annotated.rds
