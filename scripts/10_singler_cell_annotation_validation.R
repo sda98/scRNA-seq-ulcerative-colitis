@@ -1,4 +1,4 @@
-!/usr/bin/env Rscript
+# !/usr/bin/env Rscript
 
 # =============================================================================
 # 10_singler_cell_annotation_validation.R
