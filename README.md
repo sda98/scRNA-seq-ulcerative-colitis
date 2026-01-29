@@ -396,13 +396,6 @@ source("scripts/17_pseudobulk_less_mature_colonocytes_prepare.R")
 source("scripts/18_pseudobulk_less_mature_colonocytes.R")
 ```
 
-### 3. Optional: Run scCODA Separately in Python
-If you prefer to run scCODA outside of R:
-```python
-# See script 16 for Python implementation
-python scripts/16_run_sccoda_python.py
-```
-
 ---
 
 ## Citation
