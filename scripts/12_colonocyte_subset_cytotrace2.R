@@ -38,6 +38,9 @@
 #   - Uses RNA assay counts as input; filters genes expressed in >= 1% of colonocyte cells.
 # =============================================================================
 
+# =========================
+# Libraries 
+# =========================
 suppressPackageStartupMessages({
   library(Seurat)
   library(SeuratObject)
