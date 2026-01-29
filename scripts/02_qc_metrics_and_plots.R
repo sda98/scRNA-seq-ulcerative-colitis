@@ -130,7 +130,7 @@ cat("\nGenerating QC plots before filtering...\n")
 new_titles <- c(
   "nCount_RNA",
   "nFeature_RNA",
-  "Mitochondrial content (%)"
+  "Mitochondrial reads (%)"
 )
 
 new_xlabs <- c("nCount_RNA", "nFeature_RNA", "percent.mt")
@@ -391,7 +391,7 @@ cat("\nGenerating QC plots after filtering...\n")
 new_titles <- c(
   "nCount_RNA",
   "nFeature_RNA",
-  "Mitochondrial content (%)"
+  "Mitochondrial reads (%)"
 )
 
 new_xlabs <- c("nCount_RNA", "nFeature_RNA", "percent.mt")
