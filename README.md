@@ -214,8 +214,8 @@ Before running any scripts, you **must** download and extract the raw data from 
 - Assigns biologically meaningful labels to each cluster based on canonical markers
 - Creates DotPlot showing colonocyte differentiation markers grouped by category:
   - Pan-epithelial markers (EPCAM, LGALS4, etc.)
-  - Less differentiated markers (SLC12A2, EPHB2, OLFM4, MKI67, etc.)
-  - More differentiated markers (GUCA2A/B, SLC26A3, CA4, BEST4, KRT20)
+  - Less differentiated epithelial markers (SLC12A2, EPHB2, OLFM4, MKI67, etc.)
+  - More differentiated epithelial markers (GUCA2A/B, SLC26A3, CA4, BEST4, KRT20)
 - Exports cell type distribution table
 - **Output:** `seurat_integrated_annotated.rds`, cell type counts, differentiation marker DotPlot
 
