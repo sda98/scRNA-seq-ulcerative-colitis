@@ -176,7 +176,7 @@ Before running any scripts, you **must** download and extract the raw data from 
 - **Output:** `seurat_qc_filtered.rds`, QC plots, per-sample threshold table
 
 ![QC scatter plots by sample](figures/qc_scatter_by_sample.png)
-*Per-sample QC scatter plots showing nCount vs nFeature with MAD-based threshold lines. Cells outside bounds are flagged for removal.*
+*Per-sample QC scatter plots showing nCount vs nFeature with MAD-based threshold lines. Cells outside bounds and with mitochondrial content of more than 15% are flagged for removal.*
 
 ### **Script 03:** Doublet Detection
 - Runs scDblFinder on each sample independently (avoids cross-sample artifacts)
