@@ -240,7 +240,7 @@ Before running any scripts, you **must** download and extract the raw data from 
 - **Output:** `seurat_integrated_annotated.rds`, cell type counts, differentiation marker DotPlot
 
 ![Colonocyte differentiation markers — DotPlot](figures/dotplot_colonocyte_differentiation_markers.png)
-*Expression of canonical colonocyte differentiation markers across clusters. More mature colonocytes (Cluster 7) express terminal differentiation markers more significantly than less mature colonocytes (Cluster 6).*
+*Expression of canonical colonocyte differentiation markers across clusters. Cluster 7 cells express mature colonocytes markers more significantly than Cluster 6 cells.*
 
 ### **Script 10:** SingleR Machine Learning Validation
 - Validates manual annotations using SingleR machine learning-based tool with Human Primary Cell Atlas reference
