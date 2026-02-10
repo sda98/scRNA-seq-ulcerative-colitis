@@ -255,7 +255,7 @@ Before running any scripts, you **must** download and extract the raw data from 
   - Top 20 marker categorization (immune, cytoskeletal, translational, metabolic)
   - Sample composition analysis (pie chart)
   - **Sample-level paired comparison** (Cluster 4 vs. Others)
-    - Uses per-sample medians (defensible approach, avoids pseudoreplication)
+    - Uses per-sample medians 
     - Paired Wilcoxon test on sample-level data
 - **Output:** QC tables, marker plots, composition pie chart, bar comparison with p-values
 
