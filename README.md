@@ -176,7 +176,7 @@ Before running any scripts, you **must** download and extract the raw data from 
 - **Output:** `seurat_qc_filtered.rds`, QC plots, per-sample threshold table
 
 ![QC scatter plots by sample](figures/qc_scatter_by_sample.png)
-*Per-sample QC scatter plots showing nCount vs nFeature with MAD-based threshold lines. Cells outside bounds and with mitochondrial content of more than 15% are flagged for removal.*
+*Per-sample QC scatter plots showing nCount vs nFeature with MAD-based threshold lines. Cells outside bounds and with mitochondrial content of more than 15% reads are flagged for removal.*
 
 ### **Script 03:** Doublet Detection
 - Runs scDblFinder on each sample independently (avoids cross-sample artifacts)
@@ -240,7 +240,7 @@ Before running any scripts, you **must** download and extract the raw data from 
 - **Output:** `seurat_integrated_annotated.rds`, cell type counts, differentiation marker DotPlot
 
 ![Colonocyte differentiation markers — DotPlot](figures/dotplot_colonocyte_differentiation_markers.png)
-*Expression of canonical colonocyte differentiation markers across clusters. Less mature colonocytes (Cluster 6) express stem/progenitor markers; more mature colonocytes (Cluster 7) express terminal differentiation markers.*
+*Expression of canonical colonocyte differentiation markers across clusters. More mature colonocytes (Cluster 7) express terminal differentiation markers more significantly than less mature colonocytes (Cluster 6).*
 
 ### **Script 10:** SingleR Machine Learning Validation
 - Validates manual annotations using SingleR machine learning-based tool with Human Primary Cell Atlas reference
@@ -272,7 +272,7 @@ Before running any scripts, you **must** download and extract the raw data from 
 - **Output:** `seurat_colonocytes_cytotrace2.rds`, CytoTRACE2 tables & plots
 
 ![CytoTRACE2 differentiation validation](figures/cytotrace2_boxplot.png)
-*CytoTRACE2 scores confirm Cluster 6 (less mature colonocytes) has significantly lower differentiation scores than Cluster 7 (more mature colonocytes).*
+*CytoTRACE2 scores confirm Cluster 6 has higher CytoTRACE2 score than Cluster 7, indicating that Cluster 6 represents less mature/differentiated population of cells.*
 
 ### **Script 13:** Final Cell Type Annotation
 - Removes low-quality cluster (Cluster 4)
@@ -290,13 +290,13 @@ Before running any scripts, you **must** download and extract the raw data from 
 - **Output:** `seurat_integrated_clean.rds`, final annotation UMAPs
 
 ![Final cell type annotations — UMAP](figures/umap_celltype_final.png)
-*19 cell populations identified across 12 colon biopsies, annotated using canonical markers and validated with SingleR.*
+*19 cell populations identified across 12 colon biopsies, manually annotated using canonical markers and validated with SingleR.*
 
 ![Broad cell type categories — UMAP](figures/umap_celltype_broad.png)
 *Broad category view showing immune, epithelial, stromal, and neural compartments.*
 
 ![Cell types by condition — UMAP](figures/umap_celltype_by_condition.png)
-*Cell type distributions across HC, UCSC, and UC conditions. Note shifts in colonocyte and immune populations in inflamed tissue.*
+*Cell type distributions across HC, UCSC, and UC conditions. Note shifts in colonocyte and immune populations in inflamed tissue compared to healthy tissues and self-control.*
 
 ### **Script 14:** Compositional Summary
 - Calculates cell counts and proportions per sample
@@ -319,7 +319,7 @@ Before running any scripts, you **must** download and extract the raw data from 
 - **Output:** scCODA model summary, per-cell-type box plots with statistical annotations 
 
 ![scCODA compositional analysis — less mature colonocytes](figures/03_sccoda_Colonocytes__less_mature.png)
-*Bayesian compositional analysis (scCODA) showing significant shifts in less mature colonocyte proportions across conditions.*
+*Bayesian compositional analysis (scCODA) showing shifts in less mature colonocyte proportions across conditions.*
 
 ### **Script 17:** Pseudobulk DESeq2 Preparation
 - Subsets target cell type (default: "Colonocytes (less mature)")
