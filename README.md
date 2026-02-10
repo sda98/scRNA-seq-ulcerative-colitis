@@ -39,6 +39,17 @@ This repository contains a comprehensive end-to-end single-cell RNA-seq analysis
 .
 ├── data/
 │   └── raw/                           # 10X MTX files (user must download/extract)
+├── figures/
+│   ├── qc_scatter_by_sample.png
+│   ├── umap_BEFORE_integration_by_sample.png
+│   ├── umap_AFTER_integration_by_sample.png
+│   ├── dotplot_colonocyte_differentiation_markers.png
+│   ├── cytotrace2_boxplot.png
+│   ├── umap_celltype_final.png
+│   ├── umap_celltype_broad.png
+│   ├── umap_celltype_by_condition.png
+│   ├── 03_sccoda_Colonocytes__less_mature.png
+│   └── Volcano_UC_vs_HC.png
 ├── scripts/
 │   ├── 01_load_data_create_seurat.R
 │   ├── 02_qc_metrics_and_plots.R
@@ -164,6 +175,9 @@ Before running any scripts, you **must** download and extract the raw data from 
 - Visualizes cells before/after filtering (bar plots, scatter plots)
 - **Output:** `seurat_qc_filtered.rds`, QC plots, per-sample threshold table
 
+![QC scatter plots by sample](figures/qc_scatter_by_sample.png)
+*Per-sample QC scatter plots showing nCount vs nFeature with MAD-based threshold lines. Cells outside bounds are flagged for removal.*
+
 ### **Script 03:** Doublet Detection
 - Runs scDblFinder on each sample independently (avoids cross-sample artifacts)
 - Generates per-sample doublet score histograms
@@ -194,6 +208,12 @@ Before running any scripts, you **must** download and extract the raw data from 
 - Visualizes batch effects **after integration** (UMAP colored by sample)
 - **Output:** `seurat_harmony_umap.rds`, before/after integration UMAPs
 
+![UMAP before Harmony integration](figures/umap_BEFORE_integration_by_sample.png)
+*Before integration: samples cluster by batch rather than biology.*
+
+![UMAP after Harmony integration](figures/umap_AFTER_integration_by_sample.png)
+*After Harmony integration: samples mix across shared cell populations, revealing biological structure.*
+
 ### **Script 07:** Clustering Visualization
 - Generates publication-style UMAP plots:
   - Resolution 0.4 with clean repelled cluster labels
@@ -218,6 +238,9 @@ Before running any scripts, you **must** download and extract the raw data from 
   - More differentiated epithelial markers (GUCA2A/B, SLC26A3, CA4, BEST4, KRT20)
 - Exports cell type distribution table
 - **Output:** `seurat_integrated_annotated.rds`, cell type counts, differentiation marker DotPlot
+
+![Colonocyte differentiation markers — DotPlot](figures/dotplot_colonocyte_differentiation_markers.png)
+*Expression of canonical colonocyte differentiation markers across clusters. Less mature colonocytes (Cluster 6) express stem/progenitor markers; more mature colonocytes (Cluster 7) express terminal differentiation markers.*
 
 ### **Script 10:** SingleR Machine Learning Validation
 - Validates manual annotations using SingleR machine learning-based tool with Human Primary Cell Atlas reference
@@ -248,6 +271,9 @@ Before running any scripts, you **must** download and extract the raw data from 
   - Spaghetti plot showing per-sample consistency
 - **Output:** `seurat_colonocytes_cytotrace2.rds`, CytoTRACE2 tables & plots
 
+![CytoTRACE2 differentiation validation](figures/cytotrace2_boxplot.png)
+*CytoTRACE2 scores confirm Cluster 6 (less mature colonocytes) has significantly lower differentiation scores than Cluster 7 (more mature colonocytes).*
+
 ### **Script 13:** Final Cell Type Annotation
 - Removes low-quality cluster (Cluster 4)
 - Adds broad cell type categories:
@@ -262,6 +288,15 @@ Before running any scripts, you **must** download and extract the raw data from 
   - Broad categories
   - Cell types split by condition (HC, UCSC, UC) with colonocyte highlight
 - **Output:** `seurat_integrated_clean.rds`, final annotation UMAPs
+
+![Final cell type annotations — UMAP](figures/umap_celltype_final.png)
+*19 cell populations identified across 12 colon biopsies, annotated using canonical markers and validated with SingleR.*
+
+![Broad cell type categories — UMAP](figures/umap_celltype_broad.png)
+*Broad category view showing immune, epithelial, stromal, and neural compartments.*
+
+![Cell types by condition — UMAP](figures/umap_celltype_by_condition.png)
+*Cell type distributions across HC, UCSC, and UC conditions. Note shifts in colonocyte and immune populations in inflamed tissue.*
 
 ### **Script 14:** Compositional Summary
 - Calculates cell counts and proportions per sample
@@ -283,6 +318,9 @@ Before running any scripts, you **must** download and extract the raw data from 
   - `**` = inclusion probability ≥ 0.9
 - **Output:** scCODA model summary, per-cell-type box plots with statistical annotations 
 
+![scCODA compositional analysis — less mature colonocytes](figures/03_sccoda_Colonocytes__less_mature.png)
+*Bayesian compositional analysis (scCODA) showing significant shifts in less mature colonocyte proportions across conditions.*
+
 ### **Script 17:** Pseudobulk DESeq2 Preparation
 - Subsets target cell type (default: "Colonocytes (less mature)")
 - Aggregates raw counts by sample (pseudobulk approach)
@@ -302,6 +340,9 @@ Before running any scripts, you **must** download and extract the raw data from 
   - Generates MA plots (unshrunk & shrunk)
   - Creates volcano plots with functional category labels
 - **Output:** Annotated DE tables, PCA plots, MA plots, volcano plots
+
+![Volcano plot — UC vs Healthy Control](figures/Volcano_UC_vs_HC.png)
+*Pseudobulk differential expression in less mature colonocytes (UC vs HC). Genes are colored by functional category.*
 
 ---
 
