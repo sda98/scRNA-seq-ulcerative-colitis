@@ -154,10 +154,7 @@ Before running any scripts, you **must** download and extract the raw data from 
    # GSM7307094  GSM7307095  GSM7307096  ... GSM7307105
 ```
 
-**Note:** The pipeline recursively searches `data/raw/` for all `matrix.mtx.gz` files, so the exact subdirectory structure doesn't matter as long as all files are under `data/raw/`.
-
 ---
-
 ## Pipeline Workflow
 
 ### **Script 01:** Data Loading
