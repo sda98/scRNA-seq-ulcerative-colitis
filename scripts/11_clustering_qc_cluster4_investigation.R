@@ -15,7 +15,7 @@
 #      - Plot Cluster 4 top markers by type.
 #   4) Assess Cluster 4 distribution across samples (composition) and plot a pie chart.
 #   5) Compare Cluster 4 vs all other cells using per-sample paired medians
-#      (sample-based paired Wilcoxin test; avoids cell-level p-values / pseudoreplication).
+#      (sample-based paired Wilcoxon test; avoids cell-level p-values / pseudoreplication).
 #      - Export per-sample table and paired Wilcoxon test results.
 #      - Plot bar comparison (mean of per-sample medians ± SD) with p-values.
 #
