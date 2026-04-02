@@ -337,7 +337,7 @@ ggsave(
 cat("✓ Saved cluster4_composition_pie.png\n\n")
 
 # =============================================================================
-# 5) PER-SAMPLE PAIRED COMPARISON (DEFENSIBLE)
+# 5) PER-SAMPLE PAIRED COMPARISON 
 # =============================================================================
 cat("=== 3) Per-sample paired comparison (Cluster 4 vs Others) ===\n")
 
